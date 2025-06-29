@@ -1,0 +1,209 @@
+Perplexity Memory Entry - Sorting Visualizer Project Update
+Date: June 29, 2025
+
+Student: Gowrisankar, learning web development fundamentals
+
+Current Project Status
+Project: Sorting Algorithm Visualizer (React + Tailwind CSS)
+
+Path: /mnt/d/vscodes/sorting_visualiser
+
+Environment: Windows 11 + WSL2 Ubuntu 22.04, VSCode
+
+Status: Phase 1 Complete - Foundation & Array Generation ✅
+
+Technical Stack Implemented
+React with Vite (hot reload working perfectly)
+
+Tailwind CSS v3 with custom color system
+
+Node.js v22.14.0 + npm v10.9.2 in WSL2
+
+PostCSS processing Tailwind directives
+
+Project Structure Completed
+text
+src/
+├── components/
+│   └── SortingVisualizer.jsx    # Main visualizer component
+├── algorithms/                  # Ready for sorting algorithms
+├── utils/
+│   └── helpers.js              # Array generation & utility functions
+├── constants/
+│   └── index.js                # App-wide constants & config
+└── App.jsx                     # Main app with dark theme
+Key Features Implemented
+Array Generation System
+Sequential Mode: Unique values 1-to-size, shuffled (perfect for clean visualization)
+
+Random Mode: Values 1-to-size with possible duplicates (real-world simulation)
+
+Flexible function: generateArray(size, type) with Fisher-Yates shuffle
+
+Working buttons: Generate Sequential & Generate Random
+
+Helper Functions
+generateArray() - Two-mode array generation
+
+sleep() - Animation delay utility
+
+swapElements() - Immutable array swapping
+
+calculateBarHeight() - Visual scaling utility
+
+Constants System
+ARRAY_CONFIG - Size and value ranges
+
+ANIMATION_STATES - Idle, playing, paused, completed
+
+ARRAY_GENERATION_TYPES - Sequential vs random
+
+BAR_STATES - Default, hover, comparing, swapping, sorted
+
+VISUAL_CONFIG - Bar dimensions and styling
+
+Design System Implemented
+Monkeytype-Inspired Color Palette
+javascript
+// Custom Tailwind colors in tailwind.config.js
+visualizer: {
+  // Backgrounds
+  'bg-primary': '#2c2e34',     // Main dark background
+  'bg-secondary': '#323741',   // Card backgrounds
+  'bg-dark': '#1e2025',        // Darkest areas
+  
+  // Bar colors
+  'bar-default': '#e2b714',    // Default yellow
+  'bar-hover': '#f1c232',      // Hover state
+  'bar-comparing': '#ffd966',  // Comparing
+  'bar-swapping': '#ff6b6b',   // Swapping (red)
+  'bar-sorted': '#4ecdc4',     // Sorted (teal)
+  
+  // Text
+  'text-primary': '#d1d0c5',   // Cream white
+  'text-secondary': '#646669', // Muted gray
+  'text-accent': '#e2b714',    // Yellow accent
+}
+Current Functionality
+Working Features
+✅ Professional dark theme UI
+
+✅ Array generation (sequential & random modes)
+
+✅ Real-time array display as numbers
+
+✅ Responsive button controls
+
+✅ Hot reload development environment
+
+✅ TypeScript error resolution
+
+✅ Proper React component structure
+
+Test Results
+Sequential arrays: Unique shuffled values (e.g., [39, 35, 44, 32, 1, 49...])
+
+Random arrays: Values with duplicates (e.g., [19, 17, 21, 32, 5, 29...])
+
+UI: Dark theme matching Monkeytype aesthetic
+
+Performance: Instant hot reload, no errors
+
+Code Quality Standards Implemented
+Best Practices Followed
+PascalCase for React components (SortingVisualizer)
+
+camelCase for functions and variables
+
+UPPER_SNAKE_CASE for constants
+
+JSDoc documentation for all functions
+
+Immutable state updates throughout
+
+PropTypes ready for type safety
+
+Single responsibility principle
+
+Clean file organization
+
+Professional Development Patterns
+Pure functions in utilities
+
+Centralized constants for configuration
+
+Flexible color system via Tailwind
+
+Responsive design principles
+
+Error handling considerations
+
+Next Phase Ready: Visual Array Bars
+Planned Features
+ArrayBar component with hover effects
+
+Value tooltips on hover
+
+Color-coded states for sorting visualization
+
+Smooth animations and transitions
+
+Responsive bar sizing based on array size
+
+Design Specifications
+Hover effect: Bars "pop up" and show value
+
+State colors: Different colors for comparing, swapping, sorted
+
+Smooth transitions: Professional animations
+
+Responsive layout: Adapts to different array sizes
+
+Student Learning Progress
+Mastered Concepts
+React functional components and hooks
+
+Tailwind CSS custom theming
+
+JavaScript array manipulation
+
+Immutable state management
+
+Professional file organization
+
+Git workflow understanding
+
+Best practices enforcement
+
+Development Approach
+Theory-first learning methodology
+
+Best practices from day one
+
+No shortcuts policy
+
+Professional code quality
+
+Incremental feature development
+
+Immediate Next Steps
+GitHub setup (version control initialization)
+
+ArrayBar component creation
+
+Visual bar rendering with hover effects
+
+First sorting algorithm implementation (Bubble Sort)
+
+Animation system development
+
+Technical Environment Status
+WSL2 integration: Perfect file watching
+
+Hot reload: Instant feedback loop
+
+VSCode setup: IntelliSense working
+
+Error handling: TypeScript issues resolved
+
+Performance: Optimal development experience

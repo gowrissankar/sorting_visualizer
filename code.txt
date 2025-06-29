@@ -1,0 +1,142 @@
+import React, { useState, useEffect } from 'react';
+
+const SortingVisualizer = () => {
+  // State to hold our array of numbers
+  const [array, setArray] = useState([]);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [animationSpeed, setAnimationSpeed] = useState(100);
+  const [arraySize, setArraySize] = useState(50);
+
+  // Generate a new random array
+  const generateNewArray = () => {
+    const newArray = [];
+    for (let i = 0; i < arraySize; i++) {
+      newArray.push(Math.floor(Math.random() * 400) + 10);
+    }
+    setArray(newArray);
+  };
+
+  // Generate array on component mount and when arraySize changes
+  useEffect(() => {
+    generateNewArray();
+  }, [arraySize]);
+
+  // Bubble Sort Algorithm
+  const bubbleSort = async () => {
+    setIsAnimating(true);
+    const arr = [...array];
+    const n = arr.length;
+
+    for (let i = 0; i < n - 1; i++) {
+      for (let j = 0; j < n - i - 1; j++) {
+        // Highlight the elements being compared
+        const arrayBars = document.getElementsByClassName('array-bar');
+        arrayBars[j].style.backgroundColor = 'red';
+        arrayBars[j + 1].style.backgroundColor = 'red';
+
+        if (arr[j] > arr[j + 1]) {
+          // Swap elements
+          [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+          setArray([...arr]);
+        }
+
+        // Wait for animation
+        await new Promise(resolve => setTimeout(resolve, animationSpeed));
+
+        // Reset colors
+        arrayBars[j].style.backgroundColor = '#3b82f6';
+        arrayBars[j + 1].style.backgroundColor = '#3b82f6';
+      }
+    }
+    setIsAnimating(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <h1 className="text-4xl font-bold text-center mb-8">
+          Sorting Algorithm Visualizer
+        </h1>
+
+        {/* Controls */}
+        <div className="flex flex-wrap justify-center gap-4 mb-8">
+          <button
+            onClick={generateNewArray}
+            disabled={isAnimating}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded-lg font-medium"
+          >
+            Generate New Array
+          </button>
+          
+          <button
+            onClick={bubbleSort}
+            disabled={isAnimating}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 rounded-lg font-medium"
+          >
+            {isAnimating ? 'Sorting...' : 'Bubble Sort'}
+          </button>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="speed" className="text-sm">Speed:</label>
+            <input
+              id="speed"
+              type="range"
+              min="10"
+              max="200"
+              value={animationSpeed}
+              onChange={(e) => setAnimationSpeed(Number(e.target.value))}
+              disabled={isAnimating}
+              className="w-24"
+            />
+            <span className="text-sm">{animationSpeed}ms</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="size" className="text-sm">Size:</label>
+            <input
+              id="size"
+              type="range"
+              min="10"
+              max="100"
+              value={arraySize}
+              onChange={(e) => setArraySize(Number(e.target.value))}
+              disabled={isAnimating}
+              className="w-24"
+            />
+            <span className="text-sm">{arraySize}</span>
+          </div>
+        </div>
+
+        {/* Array Visualization */}
+        <div 
+          className="flex items-end justify-center gap-1 h-96 bg-gray-800 rounded-lg p-4"
+          style={{ minHeight: '400px' }}
+        >
+          {array.map((value, index) => (
+            <div
+              key={index}
+              className="array-bar bg-blue-500 transition-all duration-75"
+              style={{
+                height: `${value}px`,
+                width: `${Math.max(800 / arraySize, 4)}px`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Info Section */}
+        <div className="mt-8 text-center">
+          <p className="text-gray-300">
+            Current Algorithm: <span className="text-blue-400 font-medium">Bubble Sort</span>
+          </p>
+          <p className="text-gray-400 text-sm mt-2">
+            Bubble Sort compares adjacent elements and swaps them if they're in the wrong order.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SortingVisualizer;
