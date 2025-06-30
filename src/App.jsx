@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import SortingVisualizer from './components/SortingVisualizer';
 import ArrayBar from './components/ArrayBar';
+// REMOVED: import DatabaseTest from './components/DatabaseTest';
 import { BAR_STATES } from './constants';
 
 const App = () => {
@@ -46,6 +47,8 @@ const App = () => {
       </header>
       
       <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* REMOVED: DatabaseTest component */}
+        
         {/* ArrayBar Test Section with Multiple Sizes */}
         <div className="mb-8 p-6 bg-visualizer-bg-secondary rounded-lg border border-visualizer-bg-dark">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
