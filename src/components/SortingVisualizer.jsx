@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+// src/components/SortingVisualizer.jsx
+
+import React, { useState, useEffect } from 'react';
+import ArrayContainer from './ArrayContainer';
 import { generateArray } from '../utils/helpers';
 import {
   ARRAY_CONFIG,
@@ -7,71 +10,122 @@ import {
 } from '../constants';
 
 const SortingVisualizer = () => {
-  // Create array state, initialized with a sequential array
-  const [array, setArray] = useState(() =>
-    generateArray(ARRAY_CONFIG.DEFAULT_SIZE, ARRAY_GENERATION_TYPES.SEQUENTIAL)
-  );
 
-  // State variable for current animation state
-  const [animationState, _setAnimationState] = useState(ANIMATION_STATES.IDLE);
+  //intialising 
+  const [array, setArray] = useState([]); 
+  const [arraySize, setArraySize] = useState(ARRAY_CONFIG.DEFAULT_SIZE);
 
-  // Temporary function to handle new array generation
-  const handleGenerateNew = (type) => {
-    const newArray = generateArray(array.length, type);
-    setArray(newArray);
-    console.log(`Generated new array of type: ${type}`);
+  //selected generation type (seq or rand)
+  const [generationType, setGenerationType] = useState(ARRAY_GENERATION_TYPES.SEQUENTIAL);
+
+  //animation state
+  const [animationState, setAnimationState] = useState(ANIMATION_STATES.IDLE);
+
+  //helper methods from arraycontainer
+  const [animationMethods, setAnimationMethods] = useState(null);
+
+  //array creation on slider/type change 
+  useEffect(() => {
+    if (animationState === ANIMATION_STATES.IDLE) {
+      const newArray = generateArray(arraySize, generationType);
+      setArray(newArray);
+    }
+  }, [arraySize, generationType, animationState]);
+
+  //handle slider change
+  const handleSizeChange = (e) => {
+    if (animationState === ANIMATION_STATES.IDLE) {
+      setArraySize(parseInt(e.target.value));
+    }
   };
 
-  // JSX return
+  //handle type change (seq/random)
+  const handleTypeChange = (type) => {
+    if (animationState === ANIMATION_STATES.IDLE) {
+      setGenerationType(type);
+    }
+  };
+
+  //animation methods ready from arraycontainer 
+  const handleAnimationMethodsReady = (methods) => {
+    setAnimationMethods(methods);
+  };
+
+  //JSX return
   return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h2 className="text-xl font-semibold text-visualizer-text-primary mb-4">
-          Current Array Size: {array.length}
-        </h2>
-        <p className="text-visualizer-text-secondary mb-4">
-          Status: {animationState}
-        </p>
+    <div className="sorting-visualizer p-6 bg-visualizer-bg-secondary rounded-lg">
 
-        {/* Buttons to generate arrays */}
-        <div className="space-x-4">
-          <button
-            onClick={() => handleGenerateNew(ARRAY_GENERATION_TYPES.SEQUENTIAL)}
-            className="px-4 py-2 bg-visualizer-bar-default text-visualizer-bg-primary rounded hover:bg-visualizer-bar-hover transition-colors duration-200 shadow"
-          >
-            Generate Sequential
-          </button>
+      {/* Controls Section */}
+      <div className="controls mb-6">
+        <div className="flex flex-wrap gap-6 items-center justify-center">
 
-          <button
-            onClick={() => handleGenerateNew(ARRAY_GENERATION_TYPES.RANDOM)}
-            className="px-4 py-2 bg-visualizer-bar-sorted text-visualizer-bg-primary rounded hover:bg-visualizer-bar-comparing transition-colors duration-200 shadow"
-          >
-            Generate Random
-          </button>
+          {/* Array Size Slider */}
+          <div className="flex items-center gap-3">
+            <label className="text-visualizer-text-primary text-sm font-medium">
+              Array Size: 
+              <span className="text-visualizer-text-accent font-bold ml-1">
+                {arraySize}
+              </span>
+            </label>
+            <input
+              type="range"
+              min={ARRAY_CONFIG.MIN_SIZE}
+              max={ARRAY_CONFIG.MAX_SIZE}
+              value={arraySize}
+              onChange={handleSizeChange}
+              disabled={animationState !== ANIMATION_STATES.IDLE}
+              className="w-32 h-2 bg-visualizer-bg-dark rounded-lg appearance-none cursor-pointer slider-thumb"
+            />
+          </div>
+
+          {/* Generation Type Toggle */}
+          <div className="flex items-center gap-2">
+            <span className="text-visualizer-text-primary text-sm">Type:</span>
+            <div className="flex bg-visualizer-bg-dark rounded-lg p-1">
+              <button
+                onClick={() => handleTypeChange(ARRAY_GENERATION_TYPES.SEQUENTIAL)}
+                disabled={animationState !== ANIMATION_STATES.IDLE}
+                className={`px-3 py-1 rounded text-sm transition-colors ${
+                  generationType === ARRAY_GENERATION_TYPES.SEQUENTIAL
+                    ? 'bg-visualizer-text-accent text-visualizer-bg-primary font-medium'
+                    : 'text-visualizer-text-secondary hover:text-visualizer-text-primary'
+                }`}
+              >
+                Sequential
+              </button>
+              <button
+                onClick={() => handleTypeChange(ARRAY_GENERATION_TYPES.RANDOM)}
+                disabled={animationState !== ANIMATION_STATES.IDLE}
+                className={`px-3 py-1 rounded text-sm transition-colors ${
+                  generationType === ARRAY_GENERATION_TYPES.RANDOM
+                    ? 'bg-visualizer-text-accent text-visualizer-bg-primary font-medium'
+                    : 'text-visualizer-text-secondary hover:text-visualizer-text-primary'
+                }`}
+              >
+                Random
+              </button>
+            </div>
+          </div>
+
         </div>
-      </div>
 
-      {/* Display the array as text */}
-      <div className="bg-visualizer-bg-secondary p-6 rounded-lg shadow-xl border border-visualizer-bg-dark">
-        <p className="text-center text-visualizer-text-accent mb-2 font-medium">
-          Current Array
-        </p>
-        <p className="text-center font-mono text-sm text-visualizer-text-secondary break-all">
-          [{array.join(', ')}]
-        </p>
-      </div>
-
-      {/* Visualization Container */}
-      <div className="bg-visualizer-bg-secondary p-6 rounded-lg shadow-xl border border-visualizer-bg-dark">
-        <p className="text-center text-visualizer-text-secondary mb-4">
-          Array visualization bars will go here
-        </p>
-        <div className="h-96 bg-visualizer-bg-dark rounded-md flex items-end justify-center">
-          <p className="text-visualizer-text-accent">
-            🎨 Beautiful bars coming next!
+        {/* Extra Info */}
+        <div className="text-center mt-3">
+          <p className="text-visualizer-text-secondary text-xs">
+            {generationType === ARRAY_GENERATION_TYPES.SEQUENTIAL 
+              ? "Sequential: Unique values 1-to-size, shuffled for clean visualization"
+              : "Random: Values 1-to-size with possible duplicates"
+            }
           </p>
         </div>
       </div>
+
+      {/* Visualizer Bars */}
+      <ArrayContainer
+        array={array}
+        animationState={animationState}
+        onAnimationComplete={handleAnimationMethodsReady} //from child
+      />
     </div>
   );
 };
