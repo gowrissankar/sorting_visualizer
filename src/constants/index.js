@@ -4,17 +4,18 @@
 
 export const ANIMATION_SPEEDS =
 {
-    SLOW: 300,
-    MEDIUM: 150,
-    FAST: 50,
-    VERY_FAST: 10
+    SLOW: 100,
+    MEDIUM: 50,
+    FAST: 20,
+    VERY_FAST: 5,
+    INSTANT : 1 
 };
 
 export const ARRAY_CONFIG =
 {
     MIN_SIZE: 10 ,
     MAX_SIZE: 100 ,
-    DEFAULT_SIZE : 50 ,
+    DEFAULT_SIZE : 20 ,
     //value is limited to [ 1,.. ,size ]
 
     getValueRange: (size) => ({ min: 1, max: size })
