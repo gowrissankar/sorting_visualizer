@@ -61,7 +61,7 @@ export const BAR_STATES =
 //to unify all bars 
 export const VISUAL_CONFIG = {
     BAR: {
-        MIN_WIDTH: 6,
+        MIN_WIDTH: 3,
         MAX_WIDTH: 25,
         GAP: 1,
         MIN_HEIGHT: 2, //height of elem with val 1 

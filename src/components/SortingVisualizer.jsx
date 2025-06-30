@@ -4,11 +4,14 @@ import ArrayContainer from './ArrayContainer';
 import { generateArray } from '../utils/helpers';
 import { ARRAY_CONFIG, ARRAY_GENERATION_TYPES, ANIMATION_STATES, ANIMATION_SPEEDS } from '../constants';
 import { bubbleSort } from '../algorithms/bubbleSort';
+import { selectionSort } from '../algorithms/selectionSort';
+import { insertionSort } from '../algorithms/insertionSort';
 
 const SortingVisualizer = () => {
     const [array, setArray] = useState([]);
     const [arraySize, setArraySize] = useState(ARRAY_CONFIG.DEFAULT_SIZE);
     const [generationType, setGenerationType] = useState(ARRAY_GENERATION_TYPES.SEQUENTIAL);
+    const [selectedAlgorithm, setSelectedAlgorithm] = useState('bubble');
     const [animationState, setAnimationState] = useState(ANIMATION_STATES.IDLE);
     const [animationSpeed, setAnimationSpeed] = useState(ANIMATION_SPEEDS.MEDIUM);
     const [animationMethods, setAnimationMethods] = useState(null);
@@ -17,6 +20,13 @@ const SortingVisualizer = () => {
         algorithm: '',
         executionTime: 0
     });
+    
+    // Algorithm mapping
+    const algorithms = {
+        bubble: { name: 'Bubble Sort', func: bubbleSort },
+        selection: { name: 'Selection Sort', func: selectionSort },
+        insertion: { name: 'Insertion Sort', func: insertionSort }
+    };
     
     // Auto-generate array when size or type changes
     useEffect(() => {
@@ -51,15 +61,16 @@ const SortingVisualizer = () => {
         setAnimationMethods(methods);
     };
     
-    // Start bubble sort
-    const startBubbleSort = async () => {
+    // Start sorting with selected algorithm
+    const startSorting = async () => {
         if (!animationMethods || animationState !== ANIMATION_STATES.IDLE) return;
         
         setAnimationState(ANIMATION_STATES.PLAYING);
         const startTime = performance.now();
         
         try {
-            const result = await bubbleSort([...array], animationMethods, animationSpeed);
+            const algorithmFunc = algorithms[selectedAlgorithm].func;
+            const result = await algorithmFunc([...array], animationMethods, animationSpeed);
             
             const endTime = performance.now();
             setPerformanceStats({
@@ -159,14 +170,36 @@ const SortingVisualizer = () => {
                     </div>
                 </div>
                 
+                {/* Algorithm Selection */}
+                <div className="flex flex-wrap gap-4 items-center justify-center mb-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-visualizer-text-primary text-sm">Algorithm:</span>
+                        <select
+                            value={selectedAlgorithm}
+                            onChange={(e) => setSelectedAlgorithm(e.target.value)}
+                            disabled={animationState === ANIMATION_STATES.PLAYING}
+                            className="bg-visualizer-bg-dark text-visualizer-text-primary px-3 py-1 rounded text-sm"
+                        >
+                            {Object.entries(algorithms).map(([key, algo]) => (
+                                <option key={key} value={key}>
+                                    {algo.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                
                 {/* Sorting Controls */}
                 <div className="flex gap-4 items-center justify-center">
                     <button
-                        onClick={startBubbleSort}
+                        onClick={startSorting}
                         disabled={animationState !== ANIMATION_STATES.IDLE || !animationMethods}
                         className="px-6 py-2 bg-visualizer-text-accent text-visualizer-bg-primary rounded font-medium hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {animationState === ANIMATION_STATES.PLAYING ? 'Sorting...' : 'Start Bubble Sort'}
+                        {animationState === ANIMATION_STATES.PLAYING 
+                            ? `Sorting with ${algorithms[selectedAlgorithm].name}...` 
+                            : `Start ${algorithms[selectedAlgorithm].name}`
+                        }
                     </button>
                     
                     <button

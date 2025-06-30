@@ -83,7 +83,7 @@ const ArrayBar = ({
                     className={`
                         absolute left-1/2 transform -translate-x-1/2 z-10 pointer-events-none
                         transition-all ease-out font-bold drop-shadow-lg
-                        text-visualizer-text-accent
+                        text-visualizer-text-accent 
                         ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}
                     `}
                     style={{
