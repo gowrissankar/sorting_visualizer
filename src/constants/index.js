@@ -12,11 +12,13 @@ export const ANIMATION_SPEEDS =
 
 export const ARRAY_CONFIG =
 {
-    MIN_SIZE: 5 ,
+    MIN_SIZE: 10 ,
     MAX_SIZE: 100 ,
     DEFAULT_SIZE : 50 ,
-    MIN_VALUE : 5 ,
-    MAX_VALUE : 500 
+    //value is limited to [ 1,.. ,size ]
+
+    getValueRange: (size) => ({ min: 1, max: size })
+
 };
 
 export const ALGORITHMS = 
@@ -61,13 +63,17 @@ export const VISUAL_CONFIG = {
         MIN_WIDTH: 6,
         MAX_WIDTH: 25,
         GAP: 1,
-        MIN_HEIGHT: 20,
+        MIN_HEIGHT: 2, //height of elem with val 1 
         MAX_HEIGHT: 400,
         HOVER_LIFT: 8,
         BORDER_RADIUS: 4,
     },
 
-    CONTAINER: {
+    CONTAINER: 
+    {
         PADDING: 20,
-    }
+        WIDTH : 800 ,
+        HEIGHT : 400 ,
+    } ,
+
 };
