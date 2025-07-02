@@ -1,6 +1,7 @@
 // src/algorithms/selectionSort.js
-import { BAR_STATES } from '../constants';
-import { sleep } from '../utils/helpers';
+import { BAR_STATES } from '../constants/index.js';
+import { sleep } from '../utils/helpers.js';
+//import { PerformanceService } from '../services/performanceService.js';
 
 /**
  * Selection Sort with visual animations
@@ -62,6 +63,18 @@ export const selectionSort = async (array, animationMethods, speed = 50) => {
     
     // Mark last element as sorted
     animationMethods.markAsSorted([n - 1]);
+    
+/*     // 🔥 DATABASE INTEGRATION - Save performance data
+    try {
+        await PerformanceService.savePerformanceData(
+            'selection_sort',
+            array.length,
+            comparisons
+        );
+    } catch (error) {
+        console.error('Failed to save Selection Sort performance:', error);
+        // Continue gracefully - don't break the sorting experience
+    } */
     
     return {
         sortedArray,

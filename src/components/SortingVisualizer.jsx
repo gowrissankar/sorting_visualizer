@@ -1,14 +1,27 @@
 // src/components/SortingVisualizer.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ArrayContainer from './ArrayContainer';
-import { generateArray } from '../utils/helpers';
-import { ARRAY_CONFIG, ARRAY_GENERATION_TYPES, ANIMATION_STATES, ANIMATION_SPEEDS } from '../constants';
-import { bubbleSort } from '../algorithms/bubbleSort';
+import { generateArray } from '../utils/helpers.js';
+import { ARRAY_CONFIG, ARRAY_GENERATION_TYPES, ANIMATION_STATES, ANIMATION_SPEEDS, ALGORITHMS } from '../constants/index.js';
+import { bubbleSort } from '../algorithms/bubbleSort.js';
+import { selectionSort } from '../algorithms/selectionSort.js';
+import { insertionSort } from '../algorithms/insertionSort.js';
+import { mergeSort } from '../algorithms/mergeSort.js';
+import { quickSort } from '../algorithms/quickSort.js';
 
-const SortingVisualizer = () => {
+const algorithmMap = {
+    [ALGORITHMS.BUBBLE_SORT]: { name: 'Bubble Sort', func: bubbleSort },
+    [ALGORITHMS.SELECTION_SORT]: { name: 'Selection Sort', func: selectionSort },
+    [ALGORITHMS.INSERTION_SORT]: { name: 'Insertion Sort', func: insertionSort },
+    [ALGORITHMS.MERGE_SORT]: { name: 'Merge Sort', func: mergeSort },
+    [ALGORITHMS.QUICK_SORT]: { name: 'Quick Sort', func: quickSort }
+};
+
+const SortingVisualizer = ({ onAlgorithmChange, onSortingComplete }) => {
     const [array, setArray] = useState([]);
     const [arraySize, setArraySize] = useState(ARRAY_CONFIG.DEFAULT_SIZE);
     const [generationType, setGenerationType] = useState(ARRAY_GENERATION_TYPES.SEQUENTIAL);
+    const [selectedAlgorithm, setSelectedAlgorithm] = useState(ALGORITHMS.BUBBLE_SORT);
     const [animationState, setAnimationState] = useState(ANIMATION_STATES.IDLE);
     const [animationSpeed, setAnimationSpeed] = useState(ANIMATION_SPEEDS.MEDIUM);
     const [animationMethods, setAnimationMethods] = useState(null);
@@ -17,13 +30,14 @@ const SortingVisualizer = () => {
         algorithm: '',
         executionTime: 0
     });
-    
-    // Auto-generate array when size or type changes
+
+    // Execution guard to prevent double runs (works even in React Strict Mode)
+    const isSorting = useRef(false);
+
     useEffect(() => {
         if (animationState === ANIMATION_STATES.IDLE) {
             const newArray = generateArray(arraySize, generationType);
             setArray(newArray);
-            // Reset performance stats
             setPerformanceStats({
                 comparisons: 0,
                 algorithm: '',
@@ -31,53 +45,77 @@ const SortingVisualizer = () => {
             });
         }
     }, [arraySize, generationType, animationState]);
-    
-    // Handle slider change
+
     const handleSizeChange = (e) => {
         if (animationState === ANIMATION_STATES.IDLE) {
             setArraySize(parseInt(e.target.value));
         }
     };
-    
-    // Handle generation type change
+
     const handleTypeChange = (type) => {
         if (animationState === ANIMATION_STATES.IDLE) {
             setGenerationType(type);
         }
     };
-    
-    // FIXED: Use useCallback to prevent infinite re-renders
+
+    const handleAlgorithmChange = (algorithm) => {
+        if (animationState === ANIMATION_STATES.IDLE) {
+            setSelectedAlgorithm(algorithm);
+            if (onAlgorithmChange) {
+                onAlgorithmChange(algorithm);
+            }
+        }
+    };
+
     const handleAnimationMethodsReady = useCallback((methods) => {
-        if (!animationMethods) {  // Only set if not already set
+        if (!animationMethods) {
             setAnimationMethods(methods);
         }
     }, [animationMethods]);
-    
-    // Start sorting with bubble sort
+
+    // Main sorting trigger with execution guard
     const startSorting = async () => {
-        if (!animationMethods || animationState !== ANIMATION_STATES.IDLE) return;
-        
+        if (
+            !animationMethods ||
+            animationState !== ANIMATION_STATES.IDLE ||
+            isSorting.current
+        ) return;
+
+        isSorting.current = true; // Set guard
         setAnimationState(ANIMATION_STATES.PLAYING);
         const startTime = performance.now();
-        
+
         try {
-            const result = await bubbleSort([...array], animationMethods, animationSpeed);
-            
+            const algorithmFunc = algorithmMap[selectedAlgorithm].func;
+            const result = await algorithmFunc([...array], animationMethods, animationSpeed);
+
             const endTime = performance.now();
-            setPerformanceStats({
+            const performanceData = {
                 comparisons: result.comparisons,
                 algorithm: result.algorithm,
                 executionTime: endTime - startTime
-            });
-            
+            };
+
+            setPerformanceStats(performanceData);
             setAnimationState(ANIMATION_STATES.COMPLETED);
+
+            if (onSortingComplete) {
+                onSortingComplete({
+                    algorithm: result.algorithm,
+                    arraySize: array.length,
+                    comparisons: result.comparisons,
+                    executionTime: performanceData.executionTime
+                });
+            }
+
         } catch (error) {
             console.error('Sorting error:', error);
             setAnimationState(ANIMATION_STATES.IDLE);
+        } finally {
+            isSorting.current = false; // Release guard
         }
     };
-    
-    // Reset to idle state
+
     const resetSorting = () => {
         if (animationMethods) {
             animationMethods.resetBarStates();
@@ -89,7 +127,7 @@ const SortingVisualizer = () => {
             executionTime: 0
         });
     };
-    
+
     return (
         <div className="sorting-visualizer p-6 bg-visualizer-bg-secondary rounded-lg">
             {/* Controls */}
@@ -161,6 +199,25 @@ const SortingVisualizer = () => {
                     </div>
                 </div>
                 
+                {/* Algorithm Selection */}
+                <div className="flex flex-wrap gap-4 items-center justify-center mb-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-visualizer-text-primary text-sm">Algorithm:</span>
+                        <select
+                            value={selectedAlgorithm}
+                            onChange={(e) => handleAlgorithmChange(e.target.value)}
+                            disabled={animationState === ANIMATION_STATES.PLAYING}
+                            className="bg-visualizer-bg-dark text-visualizer-text-primary px-3 py-1 rounded text-sm"
+                        >
+                            {Object.entries(algorithmMap).map(([key, algo]) => (
+                                <option key={key} value={key}>
+                                    {algo.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                
                 {/* Sorting Controls */}
                 <div className="flex gap-4 items-center justify-center">
                     <button
@@ -169,8 +226,8 @@ const SortingVisualizer = () => {
                         className="px-6 py-2 bg-visualizer-text-accent text-visualizer-bg-primary rounded font-medium hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {animationState === ANIMATION_STATES.PLAYING 
-                            ? 'Sorting with Bubble Sort...' 
-                            : 'Start Bubble Sort'
+                            ? `Sorting with ${algorithmMap[selectedAlgorithm].name}...` 
+                            : `Start ${algorithmMap[selectedAlgorithm].name}`
                         }
                     </button>
                     

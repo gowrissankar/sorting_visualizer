@@ -13,7 +13,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ArrayBar from './ArrayBar';
-import { BAR_STATES, VISUAL_CONFIG, ANIMATION_STATES, ANIMATION_SPEEDS } from '../constants';
+import { BAR_STATES, VISUAL_CONFIG, ANIMATION_STATES, ANIMATION_SPEEDS } from '../constants/index.js';
 
 const ArrayContainer = ({ 
     array = [], 

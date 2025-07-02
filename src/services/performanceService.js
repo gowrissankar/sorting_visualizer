@@ -1,6 +1,6 @@
 //service layer to handle all db functiosn 
 
-import { supabase } from './supabaseClient'
+import { supabase } from './supabaseClient.js'
 
 export class PerformanceService {
 

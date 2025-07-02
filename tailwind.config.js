@@ -19,7 +19,7 @@ export default {
 
           // Bar colors (Yellow spectrum)
           'bar-default': '#e2b714',    // Default yellow
-          'bar-hover': '#f1c232',      // Hover state
+          'bar-hover': '#F2CB54',      // Hover state
           'bar-comparing': '#ffd966',  // Comparing state
           'bar-swapping': '#ff6b6b',   // Swapping (red)
           'bar-sorted': '#4ecdc4',     // Sorted (teal)

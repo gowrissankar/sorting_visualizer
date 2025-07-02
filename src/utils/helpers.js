@@ -1,4 +1,4 @@
-import { ARRAY_CONFIG,ARRAY_GENERATION_TYPES     } from "../constants";
+import { ARRAY_CONFIG,ARRAY_GENERATION_TYPES     } from "../constants/index.js";
 
 
 export const generateArray =

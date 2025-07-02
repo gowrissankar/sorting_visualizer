@@ -1,6 +1,7 @@
 // src/algorithms/insertionSort.js
-import { BAR_STATES } from '../constants';
-import { sleep } from '../utils/helpers';
+import { BAR_STATES } from '../constants/index.js';
+import { sleep } from '../utils/helpers.js';
+//import { PerformanceService } from '../services/performanceService.js';
 
 /**
  * Insertion Sort with visual animations
@@ -64,7 +65,19 @@ export const insertionSort = async (array, animationMethods, speed = 50) => {
         animationMethods.markAsSorted(sortedIndices);
         await sleep(speed / 2);
     }
-    
+   /*  
+    // 🔥 DATABASE INTEGRATION - Save performance data
+    try {
+        await PerformanceService.savePerformanceData(
+            'insertion_sort',
+            array.length,
+            comparisons
+        );
+    } catch (error) {
+        console.error('Failed to save Insertion Sort performance:', error);
+        // Continue gracefully - don't break the sorting experience
+    }
+     */
     return {
         sortedArray,
         comparisons,

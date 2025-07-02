@@ -1,10 +1,7 @@
 // src/algorithms/bubbleSort.js
-import { BAR_STATES } from '../constants';
-import { sleep } from '../utils/helpers';
-
-
-
-
+import { BAR_STATES } from '../constants/index.js';  
+import { sleep } from '../utils/helpers.js';
+//import { PerformanceService } from '../services/performanceService.js';
 export const bubbleSort = async (array, animationMethods, speed = 150) => {
     
     //copy 
@@ -12,7 +9,6 @@ export const bubbleSort = async (array, animationMethods, speed = 150) => {
     //performance metric 
     let comparisons = 0;
     const n = sortedArray.length;
-
 
     for (let i = 0; i < n - 1; i++) {
         let swapped = false;
@@ -53,12 +49,23 @@ export const bubbleSort = async (array, animationMethods, speed = 150) => {
     }
     
     // Mark first element as sorted (it's the last one to be confirmed)
-   for (let k = 0; k < n; k++) {
+    for (let k = 0; k < n; k++) {
         animationMethods.markAsSorted([k]);
         await sleep(speed / 2);  // Optional: quick highlight to confirm
     }
 
-    
+    /* // 🔥 DATABASE INTEGRATION - Save performance data
+    try {
+        await PerformanceService.savePerformanceData(
+            'bubble_sort',
+            array.length,
+            comparisons
+        );
+    } catch (error) {
+        console.error('Failed to save Bubble Sort performance:', error);
+        // Continue gracefully - don't break the sorting experience
+    }
+     */
     return {
         sortedArray,
         comparisons,

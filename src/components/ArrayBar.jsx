@@ -1,6 +1,6 @@
 // src/components/ArrayBar.jsx
 import React, { useState } from 'react';
-import { BAR_STATES, VISUAL_CONFIG } from '../constants';
+import { BAR_STATES, VISUAL_CONFIG } from '../constants/index.js';
 
 const ArrayBar = ({ 
     value, 
