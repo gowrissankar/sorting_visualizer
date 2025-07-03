@@ -6,10 +6,10 @@ export const CHART_CONFIG = {
         WIDTH: '100%'
     },
     Y_AXIS: {
-        MIN_SCALE: 500,
-        MAX_SCALE: 8000,
-        DEFAULT_SCALE: 6000,
-        SCALE_STEP: 500
+        MIN_SCALE: 300,
+        MAX_SCALE: 6000,
+        DEFAULT_SCALE: 800,
+        SCALE_STEP: 10
     }
 };
 
@@ -22,6 +22,7 @@ export const CHART_COLORS = {
         merge_sort: '#3498db',       // Blue
         quick_sort: '#43aa8b'        // Green/Teal
     },
+    INACTIVE_ALGORITHM: '#646669', // or any muted gray you prefer
     CURRENT_ALGORITHM: '#4ecdc4',    // Teal (your theme)
     USER_RUN: '#FFFFFF',             // White border
     BACKGROUND: '#2c2e34',

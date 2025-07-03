@@ -1,13 +1,14 @@
-// src/components/SortingVisualizer.jsx
+// /src/components/SortingVisualizer.jsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ArrayContainer from './ArrayContainer';
 import { generateArray } from '../utils/helpers.js';
-import { ARRAY_CONFIG, ARRAY_GENERATION_TYPES, ANIMATION_STATES, ANIMATION_SPEEDS, ALGORITHMS } from '../constants/index.js';
+import { ARRAY_CONFIG, ARRAY_GENERATION_TYPES, ANIMATION_STATES, ALGORITHMS } from '../constants/index.js';
 import { bubbleSort } from '../algorithms/bubbleSort.js';
 import { selectionSort } from '../algorithms/selectionSort.js';
 import { insertionSort } from '../algorithms/insertionSort.js';
 import { mergeSort } from '../algorithms/mergeSort.js';
 import { quickSort } from '../algorithms/quickSort.js';
+import '../styles/sliders.css'; // Import custom slider styles
 
 const algorithmMap = {
     [ALGORITHMS.BUBBLE_SORT]: { name: 'Bubble Sort', func: bubbleSort },
@@ -17,34 +18,39 @@ const algorithmMap = {
     [ALGORITHMS.QUICK_SORT]: { name: 'Quick Sort', func: quickSort }
 };
 
-const SortingVisualizer = ({ onAlgorithmChange, onSortingComplete }) => {
+const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComplete }) => {
     const [array, setArray] = useState([]);
     const [arraySize, setArraySize] = useState(ARRAY_CONFIG.DEFAULT_SIZE);
-    const [generationType, setGenerationType] = useState(ARRAY_GENERATION_TYPES.SEQUENTIAL);
-    const [selectedAlgorithm, setSelectedAlgorithm] = useState(ALGORITHMS.BUBBLE_SORT);
+    const [selectedAlgorithm, setSelectedAlgorithm] = useState(activeAlgorithm || ALGORITHMS.BUBBLE_SORT);
     const [animationState, setAnimationState] = useState(ANIMATION_STATES.IDLE);
-    const [animationSpeed, setAnimationSpeed] = useState(ANIMATION_SPEEDS.MEDIUM);
+    const [animationSpeed, setAnimationSpeed] = useState(3);
     const [animationMethods, setAnimationMethods] = useState(null);
-    const [performanceStats, setPerformanceStats] = useState({
-        comparisons: 0,
-        algorithm: '',
-        executionTime: 0
-    });
 
-    // Execution guard to prevent double runs (works even in React Strict Mode)
     const isSorting = useRef(false);
+    const sortingAborted = useRef(false);
+    const speedRef = useRef(3);
 
+    // Sync with navbar algorithm changes
+    useEffect(() => {
+        if (activeAlgorithm && activeAlgorithm !== selectedAlgorithm) {
+            console.log('Algorithm changed from navbar:', activeAlgorithm);
+            setSelectedAlgorithm(activeAlgorithm);
+        }
+    }, [activeAlgorithm]);
+
+    // Update speed ref when speed changes
+    useEffect(() => {
+        speedRef.current = animationSpeed;
+    }, [animationSpeed]);
+
+    // Generate Fisher-Yates shuffled sequential arrays
     useEffect(() => {
         if (animationState === ANIMATION_STATES.IDLE) {
-            const newArray = generateArray(arraySize, generationType);
+            // Use SEQUENTIAL (Fisher-Yates shuffled) - all values 1-N in random positions
+            const newArray = generateArray(arraySize, ARRAY_GENERATION_TYPES.SEQUENTIAL);
             setArray(newArray);
-            setPerformanceStats({
-                comparisons: 0,
-                algorithm: '',
-                executionTime: 0
-            });
         }
-    }, [arraySize, generationType, animationState]);
+    }, [arraySize, animationState]);
 
     const handleSizeChange = (e) => {
         if (animationState === ANIMATION_STATES.IDLE) {
@@ -52,220 +58,209 @@ const SortingVisualizer = ({ onAlgorithmChange, onSortingComplete }) => {
         }
     };
 
-    const handleTypeChange = (type) => {
+    const handleSpeedChange = (e) => {
+        console.log('Speed changing from', animationSpeed, 'to', e.target.value);
+        setAnimationSpeed(parseInt(e.target.value));
+    };
+
+    const handleShuffle = () => {
         if (animationState === ANIMATION_STATES.IDLE) {
-            setGenerationType(type);
+            // Generate new Fisher-Yates shuffled sequential array
+            setArray(generateArray(arraySize, ARRAY_GENERATION_TYPES.SEQUENTIAL));
         }
     };
 
-    const handleAlgorithmChange = (algorithm) => {
+    const handlePlay = () => {
         if (animationState === ANIMATION_STATES.IDLE) {
-            setSelectedAlgorithm(algorithm);
-            if (onAlgorithmChange) {
-                onAlgorithmChange(algorithm);
-            }
+            sortingAborted.current = false;
+            startSorting();
         }
     };
 
+    const handleReset = () => {
+        console.log('Reset button clicked - stopping animation');
+        
+        // Immediately stop any running animation
+        sortingAborted.current = true;
+        isSorting.current = false;
+        
+        // Force stop the animation state immediately
+        setAnimationState(ANIMATION_STATES.IDLE);
+        
+        // Reset animation methods and clear all bar states
+        if (animationMethods) {
+            animationMethods.resetBarStates();
+        }
+        
+        // Generate new Fisher-Yates shuffled sequential array
+        const newArray = generateArray(arraySize, ARRAY_GENERATION_TYPES.SEQUENTIAL);
+        setArray(newArray);
+    };
+
+    // Simple animation methods callback
     const handleAnimationMethodsReady = useCallback((methods) => {
         if (!animationMethods) {
             setAnimationMethods(methods);
         }
     }, [animationMethods]);
 
-    // Main sorting trigger with execution guard
     const startSorting = async () => {
-        if (
-            !animationMethods ||
-            animationState !== ANIMATION_STATES.IDLE ||
-            isSorting.current
-        ) return;
+        if (!animationMethods || animationState !== ANIMATION_STATES.IDLE || isSorting.current) {
+            return;
+        }
 
-        isSorting.current = true; // Set guard
+        isSorting.current = true;
         setAnimationState(ANIMATION_STATES.PLAYING);
-        const startTime = performance.now();
 
         try {
             const algorithmFunc = algorithmMap[selectedAlgorithm].func;
-            const result = await algorithmFunc([...array], animationMethods, animationSpeed);
-
-            const endTime = performance.now();
-            const performanceData = {
-                comparisons: result.comparisons,
-                algorithm: result.algorithm,
-                executionTime: endTime - startTime
+            
+            // Pass function that returns current speed for dynamic updates
+            const getSpeed = () => {
+                // Convert slider value (1-5) to milliseconds (500ms to 50ms)
+                const speedMap = { 1: 500, 2: 300, 3: 150, 4: 75, 5: 25 };
+                return speedMap[speedRef.current] || 150;
             };
+            
+            const result = await algorithmFunc([...array], animationMethods, getSpeed, sortingAborted);
+            
+            // Only complete if not aborted
+            if (!sortingAborted.current) {
+                setAnimationState(ANIMATION_STATES.COMPLETED);
 
-            setPerformanceStats(performanceData);
-            setAnimationState(ANIMATION_STATES.COMPLETED);
+                // AUTO-SCROLL TO CHART
+                setTimeout(() => {
+                    const chartElement = document.querySelector('.min-h-96'); // Target the chart container
+                    if (chartElement) {
+                        chartElement.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start' 
+                        });
+                    }
+                }, 500); // Small delay to let sorting animation finish
 
-            if (onSortingComplete) {
-                onSortingComplete({
-                    algorithm: result.algorithm,
-                    arraySize: array.length,
-                    comparisons: result.comparisons,
-                    executionTime: performanceData.executionTime
-                });
+                // Delay the update of user run point by 1 second after scroll
+                setTimeout(() => {
+                    if (onSortingComplete) {
+                        onSortingComplete({
+                            algorithm: selectedAlgorithm,
+                            size: array.length,
+                            comparisons: result.comparisons
+                        });
+                    }
+                }, 1500); // 1 second after scroll
             }
-
         } catch (error) {
-            console.error('Sorting error:', error);
-            setAnimationState(ANIMATION_STATES.IDLE);
+            if (!sortingAborted.current) {
+                console.error('Sorting error:', error);
+                setAnimationState(ANIMATION_STATES.IDLE);
+            }
         } finally {
-            isSorting.current = false; // Release guard
+            isSorting.current = false;
         }
     };
 
-    const resetSorting = () => {
-        if (animationMethods) {
-            animationMethods.resetBarStates();
-        }
-        setAnimationState(ANIMATION_STATES.IDLE);
-        setPerformanceStats({
-            comparisons: 0,
-            algorithm: '',
-            executionTime: 0
-        });
-    };
+    // Check if controls should be disabled
+    const isPlaying = animationState === ANIMATION_STATES.PLAYING;
+    const isIdle = animationState === ANIMATION_STATES.IDLE;
 
     return (
-        <div className="sorting-visualizer p-6 bg-visualizer-bg-secondary rounded-lg">
-            {/* Controls */}
-            <div className="controls mb-6">
-                <div className="flex flex-wrap gap-6 items-center justify-center mb-4">
-                    {/* Array Size Slider */}
-                    <div className="flex items-center gap-3">
-                        <label className="text-visualizer-text-primary text-sm font-medium">
-                            Array Size: 
-                            <span className="text-visualizer-text-accent font-bold ml-1">
-                                {arraySize}
-                            </span>
-                        </label>
-                        <input
-                            type="range"
-                            min={ARRAY_CONFIG.MIN_SIZE}
-                            max={ARRAY_CONFIG.MAX_SIZE}
-                            value={arraySize}
-                            onChange={handleSizeChange}
-                            disabled={animationState !== ANIMATION_STATES.IDLE}
-                            className="w-32 h-2 bg-visualizer-bg-dark rounded-lg appearance-none cursor-pointer slider-thumb"
-                        />
-                    </div>
-                    
-                    {/* Generation Type Toggle */}
-                    <div className="flex items-center gap-2">
-                        <span className="text-visualizer-text-primary text-sm">Type:</span>
-                        <div className="flex bg-visualizer-bg-dark rounded-lg p-1">
-                            <button
-                                onClick={() => handleTypeChange(ARRAY_GENERATION_TYPES.SEQUENTIAL)}
-                                disabled={animationState !== ANIMATION_STATES.IDLE}
-                                className={`px-3 py-1 rounded text-sm transition-colors ${
-                                    generationType === ARRAY_GENERATION_TYPES.SEQUENTIAL
-                                        ? 'bg-visualizer-text-accent text-visualizer-bg-primary font-medium'
-                                        : 'text-visualizer-text-secondary hover:text-visualizer-text-primary'
-                                }`}
-                            >
-                                Sequential
-                            </button>
-                            <button
-                                onClick={() => handleTypeChange(ARRAY_GENERATION_TYPES.RANDOM)}
-                                disabled={animationState !== ANIMATION_STATES.IDLE}
-                                className={`px-3 py-1 rounded text-sm transition-colors ${
-                                    generationType === ARRAY_GENERATION_TYPES.RANDOM
-                                        ? 'bg-visualizer-text-accent text-visualizer-bg-primary font-medium'
-                                        : 'text-visualizer-text-secondary hover:text-visualizer-text-primary'
-                                }`}
-                            >
-                                Random
-                            </button>
-                        </div>
-                    </div>
-                    
-                    {/* Speed Control */}
-                    <div className="flex items-center gap-2">
-                        <span className="text-visualizer-text-primary text-sm">Speed:</span>
-                        <select
-                            value={animationSpeed}
-                            onChange={(e) => setAnimationSpeed(parseInt(e.target.value))}
-                            disabled={animationState === ANIMATION_STATES.PLAYING}
-                            className="bg-visualizer-bg-dark text-visualizer-text-primary px-2 py-1 rounded text-sm"
-                        >
-                            <option value={ANIMATION_SPEEDS.SLOW}>Slow</option>
-                            <option value={ANIMATION_SPEEDS.MEDIUM}>Medium</option>
-                            <option value={ANIMATION_SPEEDS.FAST}>Fast</option>
-                            <option value={ANIMATION_SPEEDS.VERY_FAST}>Very Fast</option>
-                            <option value={ANIMATION_SPEEDS.INSTANT}>Instant</option>
-                        </select>
-                    </div>
+        <div className="w-full h-full flex flex-col gap-6">
+            {/* Bars Card */}
+            <div className="bg-visualizer-bg-secondary rounded-xl shadow-lg p-6 flex-1 min-h-80">
+                <div className="w-full h-full flex items-end justify-center overflow-hidden">
+                    <ArrayContainer
+                        array={array}
+                        animationState={animationState}
+                        onAnimationComplete={handleAnimationMethodsReady}
+                    />
                 </div>
-                
-                {/* Algorithm Selection */}
-                <div className="flex flex-wrap gap-4 items-center justify-center mb-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-visualizer-text-primary text-sm">Algorithm:</span>
-                        <select
-                            value={selectedAlgorithm}
-                            onChange={(e) => handleAlgorithmChange(e.target.value)}
-                            disabled={animationState === ANIMATION_STATES.PLAYING}
-                            className="bg-visualizer-bg-dark text-visualizer-text-primary px-3 py-1 rounded text-sm"
-                        >
-                            {Object.entries(algorithmMap).map(([key, algo]) => (
-                                <option key={key} value={key}>
-                                    {algo.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-                
-                {/* Sorting Controls */}
-                <div className="flex gap-4 items-center justify-center">
-                    <button
-                        onClick={startSorting}
-                        disabled={animationState !== ANIMATION_STATES.IDLE || !animationMethods}
-                        className="px-6 py-2 bg-visualizer-text-accent text-visualizer-bg-primary rounded font-medium hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {animationState === ANIMATION_STATES.PLAYING 
-                            ? `Sorting with ${algorithmMap[selectedAlgorithm].name}...` 
-                            : `Start ${algorithmMap[selectedAlgorithm].name}`
-                        }
-                    </button>
-                    
-                    <button
-                        onClick={resetSorting}
-                        disabled={animationState === ANIMATION_STATES.PLAYING}
-                        className="px-4 py-2 bg-visualizer-bg-dark text-visualizer-text-primary rounded hover:bg-visualizer-bg-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        Reset
-                    </button>
-                </div>
-                
-                {/* Performance Stats */}
-                {performanceStats.comparisons > 0 && (
-                    <div className="mt-4 text-center">
-                        <div className="inline-block bg-visualizer-bg-dark px-4 py-2 rounded">
-                            <p className="text-visualizer-text-accent font-medium">
-                                {performanceStats.algorithm}
-                            </p>
-                            <p className="text-visualizer-text-primary text-sm">
-                                Comparisons: <span className="text-visualizer-text-accent font-bold">
-                                    {performanceStats.comparisons.toLocaleString()}
-                                </span>
-                            </p>
-                            <p className="text-visualizer-text-secondary text-xs">
-                                Execution Time: {performanceStats.executionTime.toFixed(0)}ms
-                            </p>
-                        </div>
-                    </div>
-                )}
             </div>
-            
-            {/* Array Container */}
-            <ArrayContainer
-                array={array}
-                animationState={animationState}
-                onAnimationComplete={handleAnimationMethodsReady}
-            />
+
+            {/* Controls Card - Responsive layout */}
+            <div className="bg-visualizer-bg-secondary rounded-xl shadow-lg p-6 flex-shrink-0">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center justify-center">
+                    {/* Sliders Container */}
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center">
+                        {/* Size Slider */}
+                        <div className="flex flex-col items-center">
+                            <input
+                                type="range"
+                                min={ARRAY_CONFIG.MIN_SIZE}
+                                max={ARRAY_CONFIG.MAX_SIZE}
+                                value={arraySize}
+                                onChange={handleSizeChange}
+                                disabled={!isIdle}
+                                className="w-32 custom-slider disabled:opacity-50"
+                                aria-label="Array Size"
+                            />
+                            <span className="text-xs text-visualizer-text-secondary mt-1 font-normal">
+                                size: {arraySize}
+                            </span>
+                        </div>
+
+                        {/* Speed Slider */}
+                        <div className="flex flex-col items-center">
+                            <input
+                                type="range"
+                                min="1"
+                                max="5"
+                                step="1"
+                                value={animationSpeed}
+                                onChange={handleSpeedChange}
+                                className="w-32 custom-slider"
+                                aria-label="Speed"
+                            />
+                            <span className="text-xs text-visualizer-text-secondary mt-1 font-normal">
+                                speed: {animationSpeed}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Control Buttons Container - Stays contained */}
+                    <div className="flex gap-3 items-center flex-shrink-0">
+                        {/* Shuffle */}
+                        <button
+                            onClick={handleShuffle}
+                            disabled={!isIdle}
+                            className="w-12 h-12 flex items-center justify-center rounded-lg bg-visualizer-bg-dark hover:bg-visualizer-border-muted text-gray-400 hover:text-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Shuffle"
+                        >
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="16 3 21 3 21 8" />
+                                <line x1="21" y1="3" x2="12" y2="12" />
+                                <polyline points="8 21 3 21 3 16" />
+                                <line x1="3" y1="21" x2="12" y2="12" />
+                            </svg>
+                        </button>
+
+                        {/* Play */}
+                        <button
+                            onClick={handlePlay}
+                            disabled={!animationMethods || !isIdle}
+                            className="w-12 h-12 flex items-center justify-center rounded-lg bg-visualizer-bg-dark hover:bg-visualizer-border-muted text-gray-400 hover:text-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Play"
+                        >
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <polygon points="7 5 19 12 7 19" />
+                            </svg>
+                        </button>
+
+                        {/* Reset */}
+                        <button
+                            onClick={handleReset}
+                            disabled={isIdle}
+                            className="w-12 h-12 flex items-center justify-center rounded-lg bg-visualizer-bg-dark hover:bg-visualizer-border-muted text-gray-400 hover:text-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Reset"
+                        >
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="1 4 1 10 7 10" />
+                                <path d="M3.51 15A9 9 0 1 0 5.64 5.64L1 10" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

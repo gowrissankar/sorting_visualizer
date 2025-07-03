@@ -1,5 +1,5 @@
-// src/components/PerformanceChart.jsx
-import React, { useState, useEffect } from 'react';
+// /src/components/PerformanceChart.jsx
+import React, { useState, useEffect, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -9,24 +9,37 @@ import {
     LineElement,
     Title,
     Legend,
+    Tooltip,
 } from 'chart.js';
 import { PerformanceService } from '../services/performanceService.js';
 import { CHART_CONFIG, CHART_COLORS, CHART_STYLES, ALGORITHM_NAMES } from '../constants/chartConstants';
+import '../styles/sliders.css'; // Import custom slider styles
 
 // Register Chart.js components
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Legend);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Legend, Tooltip);
 
 export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
     const [chartData, setChartData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [yAxisMax, setYAxisMax] = useState(CHART_CONFIG.Y_AXIS.DEFAULT_SCALE);
+    
+    // Use ref to track last processed run data to prevent loops
+    const lastProcessedRun = useRef(null);
 
     useEffect(() => {
         loadChartData();
     }, [selectedAlgorithm]);
 
+    // Only update user run point when lastRunData actually changes
     useEffect(() => {
-        if (chartData && lastRunData) {
+        if (chartData && lastRunData && 
+            (!lastProcessedRun.current || 
+             lastProcessedRun.current.size !== lastRunData.size || 
+             lastProcessedRun.current.comparisons !== lastRunData.comparisons ||
+             lastProcessedRun.current.algorithm !== lastRunData.algorithm)) {
+            
+            console.log('Updating user run point:', lastRunData);
+            lastProcessedRun.current = { ...lastRunData };
             updateUserRunPoint();
         }
     }, [lastRunData]);
@@ -37,6 +50,8 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
             const data = await PerformanceService.getAllPerformanceData();
             const transformed = transformToChartData(data, selectedAlgorithm);
             setChartData(transformed);
+            // Reset the last processed run when loading new data
+            lastProcessedRun.current = null;
         } catch (error) {
             console.error('Failed to load chart data:', error);
         } finally {
@@ -45,7 +60,6 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
     };
 
     const transformToChartData = (data, selectedAlgo) => {
-        // Group by algorithm key
         const algorithms = {};
         data.forEach(record => {
             if (!algorithms[record.algorithm]) {
@@ -57,14 +71,14 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
             });
         });
 
-        // Build datasets for all algorithms present in DB/constants
         const datasets = Object.entries(algorithms).map(([algo, points]) => {
             const isSelected = algo === selectedAlgo;
-            const algorithmColor = CHART_COLORS.ALGORITHMS[algo] || CHART_COLORS.USER_RUN;
             return {
                 label: ALGORITHM_NAMES[algo] || algo,
                 data: points,
-                borderColor: isSelected ? CHART_COLORS.CURRENT_ALGORITHM : algorithmColor,
+                borderColor: isSelected
+                    ? '#e2b714'  // YELLOW for active algorithm line
+                    : CHART_COLORS.INACTIVE_ALGORITHM, // Gray for inactive
                 backgroundColor: 'transparent',
                 tension: CHART_STYLES.ALGORITHM_LINE.TENSION,
                 pointRadius: 0,
@@ -75,39 +89,48 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
             };
         });
 
-        // Add user run dataset (teal dot)
+        // Add user run dataset (WHITE dot with tooltip)
         datasets.push({
             label: 'user_run',
-            data: [],
-            pointBackgroundColor: CHART_COLORS.CURRENT_ALGORITHM,
-            pointBorderColor: CHART_COLORS.CURRENT_ALGORITHM,
-            pointBorderWidth: 0,
-            pointRadius: 6,
+            data: [], // Start empty
+            pointBackgroundColor: '#4ecdc4', // WHITE dot
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 1,
+            pointRadius: 4,
             pointHoverRadius: 6,
             showLine: false,
             order: -1,
             pointStyle: 'circle',
             tension: 0,
-            pointHitRadius: 0
+            pointHitRadius: 10
         });
 
         return { datasets };
     };
 
-    // Only update user run point
+    // Update user run point without triggering re-render loop
     const updateUserRunPoint = () => {
+        if (!lastRunData) return;
+        
+        console.log('Adding user run point at:', { x: lastRunData.size, y: lastRunData.comparisons });
+        
         setChartData(prevChartData => {
             if (!prevChartData) return prevChartData;
+            
+            // Create new datasets array with updated user run data
+            const newDatasets = prevChartData.datasets.map(dataset => {
+                if (dataset.label === 'user_run') {
+                    return {
+                        ...dataset,
+                        data: [{ x: lastRunData.size, y: lastRunData.comparisons }]
+                    };
+                }
+                return dataset;
+            });
+            
             return {
                 ...prevChartData,
-                datasets: prevChartData.datasets.map(dataset =>
-                    dataset.label === 'user_run'
-                        ? {
-                            ...dataset,
-                            data: lastRunData ? [{ x: lastRunData.size, y: lastRunData.comparisons }] : []
-                        }
-                        : dataset
-                )
+                datasets: newDatasets
             };
         });
     };
@@ -116,126 +139,109 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
         setYAxisMax(parseInt(e.target.value));
     };
 
-    const options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            title: {
-                display: true,
-                text: '📊 Algorithm Performance Analysis',
-                color: CHART_COLORS.TEXT_PRIMARY,
-                font: { size: 16, weight: 'bold' }
-            },
-            legend: {
-                labels: { 
-                    color: CHART_COLORS.TEXT_PRIMARY, 
-                    font: { size: 12 },
-                    filter: (legendItem) => legendItem.text !== 'user_run'
-                }
-            },
-            tooltip: { enabled: false }
-        },
-        scales: {
-            x: {
-                type: 'linear',
-                min: 10,
-                max: 100,
-                title: {
-                    display: true,
-                    text: 'Array Size',
-                    color: CHART_COLORS.TEXT_PRIMARY,
-                    font: { size: 12, weight: 'bold' }
-                },
-                ticks: { 
-                    color: CHART_COLORS.TEXT_SECONDARY,
-                    font: { size: 12 },
-                    stepSize: 10
-                },
-                grid: { color: CHART_COLORS.GRID }
-            },
-            y: {
-                min: 0,
-                max: yAxisMax,
-                title: {
-                    display: true,
-                    text: 'Comparisons',
-                    color: CHART_COLORS.TEXT_PRIMARY,
-                    font: { size: 12, weight: 'bold' }
-                },
-                ticks: { 
-                    color: CHART_COLORS.TEXT_SECONDARY,
-                    font: { size: 12 },
-                    stepSize: Math.ceil(yAxisMax / 10)
-                },
-                grid: { color: CHART_COLORS.GRID }
-            }
-        }
-    };
-
     return (
-        <div className="bg-visualizer-bg-secondary p-6 rounded-lg mb-6">
-            {/* Header with algorithm indicator */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-4">
-                <div className="flex items-center gap-4">
-                    <h3 className="text-lg font-semibold text-visualizer-text-primary">
-                        Performance Analysis
-                    </h3>
-                    <div className="flex items-center gap-2">
-                        <div 
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: CHART_COLORS.CURRENT_ALGORITHM }}
-                        ></div>
-                        <span className="text-sm text-visualizer-text-primary">
-                            {ALGORITHM_NAMES[selectedAlgorithm] || 'Unknown'}
-                        </span>
-                    </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3">
-                        <label className="text-visualizer-text-primary text-sm font-medium">
-                            Y-Scale: 
-                            <span className="text-visualizer-text-accent font-bold ml-1">
-                                {yAxisMax.toLocaleString()}
-                            </span>
-                        </label>
-                        <input
-                            type="range"
-                            min={CHART_CONFIG.Y_AXIS.MIN_SCALE}
-                            max={CHART_CONFIG.Y_AXIS.MAX_SCALE}
-                            step={CHART_CONFIG.Y_AXIS.SCALE_STEP}
-                            value={yAxisMax}
-                            onChange={handleYAxisChange}
-                            className="w-32 h-2 bg-visualizer-bg-dark rounded-lg appearance-none cursor-pointer slider-thumb"
-                        />
-                    </div>
-                    
-                    <button 
-                        onClick={loadChartData}
-                        className="px-3 py-1 text-sm bg-visualizer-bg-dark text-visualizer-text-secondary rounded hover:bg-visualizer-bg-primary"
-                    >
-                        🔄 Refresh
-                    </button>
-                </div>
-            </div>
-            
-            {/* Chart container */}
-            <div style={{ height: CHART_CONFIG.CONTAINER.HEIGHT }}>
+        <div className="w-full h-full bg-visualizer-bg-secondary rounded-xl shadow-lg p-6 flex flex-col min-h-96">
+            {/* Chart - Takes most of the space */}
+            <div className="flex-1 w-full min-h-80">
                 {loading ? (
                     <div className="flex items-center justify-center h-full text-visualizer-text-primary">
-                        Loading performance data...
+                        Loading...
                     </div>
                 ) : chartData && chartData.datasets.length > 0 ? (
-                    <Line data={chartData} options={options} />
+                    <Line
+                        data={chartData}
+                        options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: { display: false },
+                                legend: { display: false },
+                                tooltip: { 
+                                    enabled: true,
+                                    filter: function(tooltipItem) {
+                                        return tooltipItem.dataset.label === 'user_run';
+                                    },
+                                    backgroundColor: 'rgba(44,46,52,0.95)',
+                                    titleColor: '#94a3b8',
+                                    bodyColor: '#94a3b8',
+                                    borderColor: 'rgba(148,163,184,0.20)',
+                                    borderWidth: 1,
+                                    cornerRadius: 8,
+                                    padding: 6,
+                                    displayColors: false,
+                                    callbacks: {
+                                        title: () => '',
+                                        label: (ctx) => {
+                                            const algo = ALGORITHM_NAMES[lastRunData?.algorithm] ?? lastRunData?.algorithm;
+                                            return [algo, ctx.parsed.x + ' • ' + ctx.parsed.y];
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    type: 'linear',
+                                    min: 10,
+                                    max: 100,
+                                    title: { display: false },
+                                    ticks: {
+                                        color: CHART_COLORS.TEXT_SECONDARY,
+                                        font: { size: 12 },
+                                        stepSize: 10
+                                    },
+                                    grid: { color: CHART_COLORS.GRID }
+                                },
+                                y: {
+                                    min: 0,
+                                    max: yAxisMax,
+                                    title: { display: false },
+                                    ticks: {
+                                        color: CHART_COLORS.TEXT_SECONDARY,
+                                        font: { size: 12 },
+                                        stepSize: Math.ceil(yAxisMax / 10)
+                                    },
+                                    grid: { color: CHART_COLORS.GRID }
+                                }
+                            }
+                        }}
+                    />
                 ) : (
                     <div className="flex items-center justify-center h-full text-visualizer-text-secondary">
-                        No performance data available. Run some sorting algorithms to see comparisons!
+                        No data
                     </div>
                 )}
             </div>
             
-            <div className="mt-2 text-xs text-visualizer-text-secondary text-center">
-                Clean static curves • Teal dot = your last run • Y-scale persists across updates
+            {/* Controls row below chart */}
+            <div className="flex gap-6 mt-6 items-center justify-center flex-shrink-0">
+                {/* Y-Scale Slider */}
+                <div className="flex flex-col items-center">
+                    <input
+                        type="range"
+                        min={CHART_CONFIG.Y_AXIS.MIN_SCALE}
+                        max={CHART_CONFIG.Y_AXIS.MAX_SCALE}
+                        step={CHART_CONFIG.Y_AXIS.SCALE_STEP}
+                        value={yAxisMax}
+                        onChange={handleYAxisChange}
+                        className="w-32 custom-slider"
+                        aria-label="Y-Scale"
+                    />
+                    <span className="text-xs text-visualizer-text-secondary mt-1 font-normal">
+                        scale: {yAxisMax.toLocaleString()}
+                    </span>
+                </div>
+                
+                {/* Refresh Button */}
+                <button
+                    onClick={loadChartData}
+                    className="w-10 h-10 rounded bg-visualizer-bg-dark hover:bg-visualizer-border-muted transition text-gray-400 hover:text-gray-300 flex items-center justify-center"
+                    aria-label="Refresh"
+                >
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="1 4 1 10 7 10" />
+                        <path d="M3.51 15A9 9 0 1 0 5.64 5.64L1 10" />
+                    </svg>
+                </button>
             </div>
         </div>
     );
