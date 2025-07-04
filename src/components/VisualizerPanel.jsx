@@ -31,14 +31,15 @@ export default function VisualizerPanel({ activeAlgorithm, onAlgorithmChange }) 
       />
 
     {/* Hero message */}
-      <div className="bg-visualizer-bg-secondary rounded-lg p-3 border-l-2 border-gray-500">
-        <p className="text-gray-300 text-sm font-medium mb-1">
-          Sorting out patterns from chaos
+        <div className="bg-visualizer-bg-secondary rounded-lg p-3 border-l-2 border-gray-500">
+        <p className="text-gray-300 text-base font-medium mb-1">
+            Sorting out patterns from chaos
         </p>
-        <p className="text-visualizer-text-secondary text-xs">
-          This chart evolves with every execution — each point reflects the real-time average of all your previous runs.
+        <p className="text-visualizer-text-secondary text-sm">
+            This chart evolves with every execution — each point reflects the real-time average of all previous runs across users 
         </p>
-      </div>
+        </div>
+
 
     </div>
   );
