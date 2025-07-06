@@ -49,25 +49,6 @@ The sidebar includes each algorithm’s **description**, **time/space complexity
 | Database      | Atomic upserts (custom function), generated columns |
 | Deployment    | Vercel with automated CI/CD pipeline                |
 
-## Architecture
-
-```text
-React Frontend → PerformanceService.js → Supabase REST → PostgreSQL
-
-
-ArrayContainer.jsx / Controls.jsx
-     ↓
-Sort Algorithm (e.g. quickSort.js)
-     ↓
-PerformanceService.savePerformanceData(algorithm, size, comparisons)
-     ↓
-Supabase RPC: upsert_performance_data()
-     ↓
-Database stores: total_comparisons, sample_count → computes average
-     ↓
-PerformanceChart.jsx fetches averages → Chart.js renders them
-```
-
 ### Upsert Mechanism
 
 SortViz avoids data duplication and ensures consistency using a Supabase stored procedure. For each `(algorithm, size)` combination:
