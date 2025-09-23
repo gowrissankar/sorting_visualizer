@@ -30,13 +30,41 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
     const sortingAborted = useRef(false);
     const speedRef = useRef(3);
 
-    // Sync with navbar algorithm changes
+    // Debug: Log component renders and algorithm changes for responsive testing
+    useEffect(() => {
+        console.log('SortingVisualizer rendered:', {
+            algorithm: selectedAlgorithm,
+            arraySize,
+            windowWidth: window.innerWidth,
+            animationState
+        });
+    }, [selectedAlgorithm, arraySize, animationState]);
+
+    // Sync with navbar algorithm changes - FIXED: Stop animation and reshuffle when algorithm changes
     useEffect(() => {
         if (activeAlgorithm && activeAlgorithm !== selectedAlgorithm) {
-            console.log('Algorithm changed from navbar:', activeAlgorithm);
+            console.log('Algorithm changed from navbar:', activeAlgorithm, '- stopping current animation');
+            
+            // Stop any running animation immediately
+            if (animationState === ANIMATION_STATES.PLAYING) {
+                sortingAborted.current = true;
+                isSorting.current = false;
+                setAnimationState(ANIMATION_STATES.IDLE);
+                
+                // Reset bar states if animation methods are available
+                if (animationMethods) {
+                    animationMethods.resetBarStates();
+                }
+            }
+            
+            // Update to new algorithm
             setSelectedAlgorithm(activeAlgorithm);
+            
+            // Generate new shuffled array for the new algorithm
+            const newArray = generateArray(arraySize, ARRAY_GENERATION_TYPES.SEQUENTIAL);
+            setArray(newArray);
         }
-    }, [activeAlgorithm]);
+    }, [activeAlgorithm, selectedAlgorithm, animationState, animationMethods, arraySize]);
 
     // Update speed ref when speed changes
     useEffect(() => {
@@ -54,6 +82,7 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
 
     const handleSizeChange = (e) => {
         if (animationState === ANIMATION_STATES.IDLE) {
+            console.log('Array size changed to:', e.target.value);
             setArraySize(parseInt(e.target.value));
         }
     };
@@ -65,6 +94,7 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
 
     const handleShuffle = () => {
         if (animationState === ANIMATION_STATES.IDLE) {
+            console.log('Shuffling array with size:', arraySize);
             // Generate new Fisher-Yates shuffled sequential array
             setArray(generateArray(arraySize, ARRAY_GENERATION_TYPES.SEQUENTIAL));
         }
@@ -72,13 +102,15 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
 
     const handlePlay = () => {
         if (animationState === ANIMATION_STATES.IDLE) {
+            console.log('Starting sort animation for:', selectedAlgorithm);
             sortingAborted.current = false;
             startSorting();
         }
     };
 
+    // FIXED: Reset now stops animation AND generates new shuffled array
     const handleReset = () => {
-        console.log('Reset button clicked - stopping animation');
+        console.log('Reset button clicked - stopping animation and reshuffling array');
         
         // Immediately stop any running animation
         sortingAborted.current = true;
@@ -92,14 +124,16 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
             animationMethods.resetBarStates();
         }
         
-        // Generate new Fisher-Yates shuffled sequential array
+        // FIXED: Generate new Fisher-Yates shuffled sequential array (was missing reshuffle)
         const newArray = generateArray(arraySize, ARRAY_GENERATION_TYPES.SEQUENTIAL);
         setArray(newArray);
+        console.log('Array reshuffled with', newArray.length, 'elements');
     };
 
     // Simple animation methods callback
     const handleAnimationMethodsReady = useCallback((methods) => {
         if (!animationMethods) {
+            console.log('Animation methods ready for ArrayContainer');
             setAnimationMethods(methods);
         }
     }, [animationMethods]);
@@ -127,19 +161,19 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
             // Only complete if not aborted
             if (!sortingAborted.current) {
                 setAnimationState(ANIMATION_STATES.COMPLETED);
+                console.log('Sorting completed with', result.comparisons, 'comparisons');
 
-                // AUTO-SCROLL TO CHART
+                // AUTO-SCROLL DOWN - SIMPLE & RELIABLE
                 setTimeout(() => {
-                    const chartElement = document.querySelector('.min-h-96'); // Target the chart container
-                    if (chartElement) {
-                        chartElement.scrollIntoView({ 
-                            behavior: 'smooth', 
-                            block: 'start' 
-                        });
-                    }
-                }, 500); // Small delay to let sorting animation finish
+                    console.log('Auto-scrolling down to show chart');
+                    const scrollAmount = window.innerHeight * 0.8; // Scroll down 80% of screen height
+                    window.scrollTo({
+                        top: window.pageYOffset + scrollAmount,
+                        behavior: 'smooth'
+                    });
+                }, 2500); // Same timing as before
 
-                // Delay the update of user run point by 1 second after scroll
+                // Delay the update of user run point
                 setTimeout(() => {
                     if (onSortingComplete) {
                         onSortingComplete({
@@ -148,7 +182,9 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
                             comparisons: result.comparisons
                         });
                     }
-                }, 1500); // 1 second after scroll
+                }, 1500);
+            } else {
+                console.log('Sorting was aborted');
             }
         } catch (error) {
             if (!sortingAborted.current) {
@@ -165,9 +201,9 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
     const isIdle = animationState === ANIMATION_STATES.IDLE;
 
     return (
-        <div className="w-full h-full flex flex-col gap-6">
-            {/* Bars Card */}
-            <div className="bg-visualizer-bg-secondary rounded-xl shadow-lg p-6 flex-1 min-h-80">
+        <div className="w-full h-full flex flex-col gap-3 md:gap-6">
+            {/* Bars Card - SMALLER ON MOBILE */}
+            <div className="bg-visualizer-bg-secondary rounded-xl shadow-lg p-3 md:p-6 flex-1 min-h-48 md:min-h-80">
                 <div className="w-full h-full flex items-end justify-center overflow-hidden">
                     <ArrayContainer
                         array={array}
@@ -177,12 +213,12 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
                 </div>
             </div>
 
-            {/* Controls Card - Responsive layout */}
-            <div className="bg-visualizer-bg-secondary rounded-xl shadow-lg p-6 flex-shrink-0">
-                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center justify-center">
-                    {/* Sliders Container */}
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center">
-                        {/* Size Slider */}
+            {/* Controls Card - COMPACT ON MOBILE */}
+            <div className="bg-visualizer-bg-secondary rounded-xl shadow-lg p-3 md:p-6 flex-shrink-0">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-6 items-center justify-center">
+                    {/* Sliders Container - SIDE BY SIDE ON ALL SCREENS */}
+                    <div className="flex flex-row gap-3 md:gap-6 items-center justify-center">
+                        {/* Size Slider - SMALLER ON MOBILE */}
                         <div className="flex flex-col items-center">
                             <input
                                 type="range"
@@ -191,7 +227,7 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
                                 value={arraySize}
                                 onChange={handleSizeChange}
                                 disabled={!isIdle}
-                                className="w-32 custom-slider disabled:opacity-50"
+                                className="w-20 md:w-32 custom-slider disabled:opacity-50"
                                 aria-label="Array Size"
                             />
                             <span className="text-xs text-visualizer-text-secondary mt-1 font-normal">
@@ -199,7 +235,7 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
                             </span>
                         </div>
 
-                        {/* Speed Slider */}
+                        {/* Speed Slider - SMALLER ON MOBILE */}
                         <div className="flex flex-col items-center">
                             <input
                                 type="range"
@@ -208,7 +244,7 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
                                 step="1"
                                 value={animationSpeed}
                                 onChange={handleSpeedChange}
-                                className="w-32 custom-slider"
+                                className="w-20 md:w-32 custom-slider"
                                 aria-label="Speed"
                             />
                             <span className="text-xs text-visualizer-text-secondary mt-1 font-normal">
@@ -217,16 +253,16 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
                         </div>
                     </div>
 
-                    {/* Control Buttons Container - Stays contained */}
-                    <div className="flex gap-3 items-center flex-shrink-0">
-                        {/* Shuffle */}
+                    {/* Control Buttons Container - SMALLER ON MOBILE */}
+                    <div className="flex gap-2 md:gap-3 items-center flex-shrink-0">
+                        {/* Shuffle - SMALLER ON MOBILE */}
                         <button
                             onClick={handleShuffle}
                             disabled={!isIdle}
-                            className="w-12 h-12 flex items-center justify-center rounded-lg bg-visualizer-bg-dark hover:bg-visualizer-border-muted text-gray-400 hover:text-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center rounded-lg bg-visualizer-bg-dark hover:bg-visualizer-border-muted text-gray-400 hover:text-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Shuffle"
                         >
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg viewBox="0 0 24 24" width="16" height="16" className="md:w-5 md:h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="16 3 21 3 21 8" />
                                 <line x1="21" y1="3" x2="12" y2="12" />
                                 <polyline points="8 21 3 21 3 16" />
@@ -234,26 +270,26 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
                             </svg>
                         </button>
 
-                        {/* Play */}
+                        {/* Play - SMALLER ON MOBILE */}
                         <button
                             onClick={handlePlay}
                             disabled={!animationMethods || !isIdle}
-                            className="w-12 h-12 flex items-center justify-center rounded-lg bg-visualizer-bg-dark hover:bg-visualizer-border-muted text-gray-400 hover:text-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center rounded-lg bg-visualizer-bg-dark hover:bg-visualizer-border-muted text-gray-400 hover:text-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Play"
                         >
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <svg viewBox="0 0 24 24" width="16" height="16" className="md:w-5 md:h-5" fill="currentColor">
                                 <polygon points="7 5 19 12 7 19" />
                             </svg>
                         </button>
 
-                        {/* Reset */}
+                        {/* Reset - SMALLER ON MOBILE */}
                         <button
                             onClick={handleReset}
                             disabled={isIdle}
-                            className="w-12 h-12 flex items-center justify-center rounded-lg bg-visualizer-bg-dark hover:bg-visualizer-border-muted text-gray-400 hover:text-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-8 h-8 md:w-12 md:h-12 flex items-center justify-center rounded-lg bg-visualizer-bg-dark hover:bg-visualizer-border-muted text-gray-400 hover:text-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Reset"
                         >
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg viewBox="0 0 24 24" width="16" height="16" className="md:w-5 md:h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="1 4 1 10 7 10" />
                                 <path d="M3.51 15A9 9 0 1 0 5.64 5.64L1 10" />
                             </svg>

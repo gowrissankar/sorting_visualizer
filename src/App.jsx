@@ -1,4 +1,4 @@
-// /src/App.jsx
+// /src/components/App.jsx
 import React, { useState } from 'react';
 import { ALGORITHMS } from './constants/index.js';
 import Navbar from './components/Navbar';
@@ -16,6 +16,9 @@ export default function App() {
   const [activeAlgorithm, setActiveAlgorithm] = useState(getRandomAlgorithm());
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // Debug: log window size and sidebar state for responsive testing
+  console.log("App Rendered: window width =", window.innerWidth, "sidebarOpen:", sidebarOpen);
+
   return (
     <div className="min-h-screen bg-visualizer-bg-primary text-visualizer-text-primary flex flex-col">
       <Navbar 
@@ -24,35 +27,50 @@ export default function App() {
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         sidebarOpen={sidebarOpen}
       />
-      <div className="flex flex-1 w-full overflow-hidden p-8 gap-8">
+
+      {/* Mobile Layout: Single Column (No Sidebar) */}
+      <div className="md:hidden flex flex-col p-4 sm:p-6 gap-6">
         {/* Main Content */}
-        <div className={`flex-1 transition-all duration-300 ${
-          sidebarOpen ? 'w-3/4' : 'w-full'
+        <VisualizerPanel 
+          activeAlgorithm={activeAlgorithm}
+          onAlgorithmChange={setActiveAlgorithm}
+        />
+
+        {/* Sidebar Content Below (No Toggle, Always Visible) */}
+        <div className="w-full">
+          <Sidebar
+            activeAlgorithm={activeAlgorithm}
+            isOpen={true}
+            isMobile={true}
+          />
+        </div>
+      </div>
+
+      {/* Desktop Layout: Side-by-Side with Toggle */}
+      <div className="hidden md:flex flex-1 w-full overflow-hidden p-8 gap-8">
+        {/* Main Content - Expands when sidebar closed */}
+        <div className={`min-w-0 transition-all duration-300 ${
+          sidebarOpen ? "w-3/4" : "w-full"
         }`}>
           <VisualizerPanel 
             activeAlgorithm={activeAlgorithm}
             onAlgorithmChange={setActiveAlgorithm}
           />
         </div>
-        
-        {/* Sidebar - Card aligned with main content */}
+
+        {/* Sidebar - Completely Hidden When Closed */}
         {sidebarOpen && (
-          <div className="w-1/4 transition-all duration-300">
+          <div className="w-1/4 min-w-0 transition-all duration-300">
             <Sidebar
               activeAlgorithm={activeAlgorithm}
               isOpen={sidebarOpen}
-              onToggle={() => setSidebarOpen(!sidebarOpen)}
+              isMobile={false}
             />
           </div>
         )}
-
-
       </div>
 
       {/* <Footer /> */}
-
     </div>
-
-    
   );
 }

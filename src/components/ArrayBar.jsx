@@ -1,4 +1,4 @@
-// src/components/ArrayBar.jsx
+// /src/components/ArrayBar.jsx
 import React, { useState } from 'react';
 import { BAR_STATES, VISUAL_CONFIG } from '../constants/index.js';
 
@@ -9,7 +9,7 @@ const ArrayBar = ({
     state = BAR_STATES.DEFAULT,
     onClick,
     isSorting = false,
-    containerWidth = VISUAL_CONFIG.CONTAINER.WIDTH // ✅ NEW: Responsive width
+    containerWidth = VISUAL_CONFIG.CONTAINER.WIDTH // ✅ Responsive width
 }) => {
     const [isHovered, setIsHovered] = useState(false);
     
@@ -30,9 +30,9 @@ const ArrayBar = ({
     const scalingFactor = (maxUsableHeight - baseHeight) / arraySize;
     const barHeight = baseHeight + (value * scalingFactor);
     
-    // ✅ RESPONSIVE: Font size and gap proportional to bar width
-    const responsiveFontSize = Math.max(8, Math.min(16, barWidth * 0.5));
-    const numberOffset = barHeight + Math.max(6, barWidth * 0.15); // Minimum 6px gap
+    // ✅ RESPONSIVE: Font size and gap proportional to bar width with mobile constraints
+    const responsiveFontSize = Math.max(6, Math.min(16, barWidth * 0.5)); // Minimum 6px for mobile
+    const numberOffset = barHeight + Math.max(4, barWidth * 0.15); // Minimum 4px gap for mobile
     
     // Using your existing Tailwind colors
     const getBarColor = () => {
@@ -54,6 +54,14 @@ const ArrayBar = ({
         }
     };
 
+    // Mobile-friendly touch handling - prevent hover states on touch devices
+    const handleTouchStart = () => {
+        if ('ontouchstart' in window) {
+            // Skip hover effects on touch devices
+            onClick?.(index);
+        }
+    };
+
     return (
         <div className="relative flex items-end">
             <div
@@ -62,6 +70,7 @@ const ArrayBar = ({
                     transition-all duration-300 ease-out cursor-pointer
                     border border-visualizer-bg-secondary
                     ${isHovered ? 'brightness-110 scale-x-105' : ''}
+                    touch-manipulation
                 `}
                 style={{
                     width: `${barWidth}px`,
@@ -69,16 +78,18 @@ const ArrayBar = ({
                     marginRight: `${VISUAL_CONFIG.BAR.GAP}px`,
                     borderRadius: `${VISUAL_CONFIG.BAR.BORDER_RADIUS}px`,
                     transformOrigin: 'bottom center',
+                    minWidth: '2px', // Minimum width for very small screens
                 }}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
+                onTouchStart={handleTouchStart}
                 onClick={() => onClick?.(index)}
                 data-testid={`array-bar-${index}`}
                 aria-label={`Array element ${index + 1} with value ${value}`}
             />
             
-            {/* ✅ CONDITIONAL: Only show when not sorting */}
-            {!isSorting && (
+            {/* ✅ CONDITIONAL: Only show when not sorting and bar is wide enough */}
+            {!isSorting && barWidth > 8 && (
                 <div 
                     className={`
                         absolute left-1/2 transform -translate-x-1/2 z-10 pointer-events-none

@@ -15,8 +15,10 @@ import { PerformanceService } from '../services/performanceService.js';
 import { CHART_CONFIG, CHART_COLORS, CHART_STYLES, ALGORITHM_NAMES } from '../constants/chartConstants';
 import '../styles/sliders.css'; // Import custom slider styles
 
+
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Legend, Tooltip);
+
 
 export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
     const [chartData, setChartData] = useState(null);
@@ -26,9 +28,11 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
     // Use ref to track last processed run data to prevent loops
     const lastProcessedRun = useRef(null);
 
+
     useEffect(() => {
         loadChartData();
     }, [selectedAlgorithm]);
+
 
     // Only update user run point when lastRunData actually changes
     useEffect(() => {
@@ -43,6 +47,7 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
             updateUserRunPoint();
         }
     }, [lastRunData]);
+
 
     const loadChartData = async () => {
         try {
@@ -59,6 +64,7 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
         }
     };
 
+
     const transformToChartData = (data, selectedAlgo) => {
         const algorithms = {};
         data.forEach(record => {
@@ -70,6 +76,7 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
                 y: record.average_comparisons
             });
         });
+
 
         const datasets = Object.entries(algorithms).map(([algo, points]) => {
             const isSelected = algo === selectedAlgo;
@@ -89,11 +96,12 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
             };
         });
 
-        // Add user run dataset (WHITE dot with tooltip)
+
+        // Add user run dataset (teal dot with tooltip)
         datasets.push({
             label: 'user_run',
             data: [], // Start empty
-            pointBackgroundColor: '#4ecdc4', // WHITE dot
+            pointBackgroundColor: '#4ecdc4', // Teal dot
             pointBorderColor: '#ffffff',
             pointBorderWidth: 1,
             pointRadius: 4,
@@ -105,8 +113,10 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
             pointHitRadius: 10
         });
 
+
         return { datasets };
     };
+
 
     // Update user run point without triggering re-render loop
     const updateUserRunPoint = () => {
@@ -135,14 +145,19 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
         });
     };
 
+
     const handleYAxisChange = (e) => {
         setYAxisMax(parseInt(e.target.value));
     };
 
+
     return (
-        <div className="w-full h-full bg-visualizer-bg-secondary rounded-xl shadow-lg p-6 flex flex-col min-h-96">
-            {/* Chart - Takes most of the space */}
-            <div className="flex-1 w-full min-h-80">
+        <div className="w-full h-full flex flex-col">
+            {/* Chart Container - NO EXTRA CARD STYLING */}
+            <div className="w-full flex-1" style={{
+                minHeight: window.innerWidth < 768 ? '512px' : '400px',
+                height: window.innerWidth < 768 ? '512px' : 'auto'
+            }}>
                 {loading ? (
                     <div className="flex items-center justify-center h-full text-visualizer-text-primary">
                         Loading...
@@ -186,7 +201,7 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
                                     title: { display: false },
                                     ticks: {
                                         color: CHART_COLORS.TEXT_SECONDARY,
-                                        font: { size: 12 },
+                                        font: { size: window.innerWidth < 640 ? 10 : 12 },
                                         stepSize: 10
                                     },
                                     grid: { color: CHART_COLORS.GRID }
@@ -197,7 +212,7 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
                                     title: { display: false },
                                     ticks: {
                                         color: CHART_COLORS.TEXT_SECONDARY,
-                                        font: { size: 12 },
+                                        font: { size: window.innerWidth < 640 ? 10 : 12 },
                                         stepSize: Math.ceil(yAxisMax / 10)
                                     },
                                     grid: { color: CHART_COLORS.GRID }
@@ -212,9 +227,9 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
                 )}
             </div>
             
-            {/* Controls row below chart */}
-            <div className="flex gap-6 mt-6 items-center justify-center flex-shrink-0">
-                {/* Y-Scale Slider */}
+            {/* Controls row below chart - SIDE BY SIDE ON ALL SCREENS + MOBILE SIZED */}
+            <div className="flex flex-row gap-3 md:gap-6 mt-4 sm:mt-6 items-center justify-center flex-shrink-0">
+                {/* Y-Scale Slider - SMALLER ON MOBILE */}
                 <div className="flex flex-col items-center">
                     <input
                         type="range"
@@ -223,7 +238,7 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
                         step={CHART_CONFIG.Y_AXIS.SCALE_STEP}
                         value={yAxisMax}
                         onChange={handleYAxisChange}
-                        className="w-32 custom-slider"
+                        className="w-20 md:w-32 custom-slider"
                         aria-label="Y-Scale"
                     />
                     <span className="text-xs text-visualizer-text-secondary mt-1 font-normal">
@@ -231,13 +246,13 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
                     </span>
                 </div>
                 
-                {/* Refresh Button */}
+                {/* Refresh Button - SMALLER ON MOBILE */}
                 <button
                     onClick={loadChartData}
-                    className="w-10 h-10 rounded bg-visualizer-bg-dark hover:bg-visualizer-border-muted transition text-gray-400 hover:text-gray-300 flex items-center justify-center"
+                    className="w-8 h-8 md:w-10 md:h-10 rounded bg-visualizer-bg-dark hover:bg-visualizer-border-muted transition text-gray-400 hover:text-gray-300 flex items-center justify-center touch-manipulation"
                     aria-label="Refresh"
                 >
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg viewBox="0 0 24 24" width="16" height="16" className="md:w-4 md:h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="1 4 1 10 7 10" />
                         <path d="M3.51 15A9 9 0 1 0 5.64 5.64L1 10" />
                     </svg>

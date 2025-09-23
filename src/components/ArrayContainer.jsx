@@ -1,5 +1,4 @@
 // /src/components/ArrayContainer.jsx
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ArrayBar from './ArrayBar';
 import { BAR_STATES, VISUAL_CONFIG, ANIMATION_STATES, ANIMATION_SPEEDS } from '../constants/index.js';
@@ -173,13 +172,13 @@ const ArrayContainer = ({
             {/* Responsive container, transparent background since it's inside a card */}
             <div
                 ref={containerRef}
-                className="w-full h-full flex-1 flex items-end justify-center overflow-hidden"
+                className="w-full h-full flex-1 flex items-end justify-center overflow-hidden px-1 sm:px-0"
                 style={{
                     minHeight: `${VISUAL_CONFIG.CONTAINER.HEIGHT}px`
                 }}
             >
                 {/* Array render */}
-                <div className="flex-1 flex items-end justify-center gap-0 h-full w-full">
+                <div className="flex-1 flex items-end justify-center gap-0 h-full w-full min-w-0">
                     {displayArray.length > 0 ? (
                         displayArray.map((value, index) => (
                             <ArrayBar

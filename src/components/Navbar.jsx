@@ -1,5 +1,5 @@
-// In Navbar.jsx
-import React, { useState, useEffect, useRef } from 'react';
+// /src/components/Navbar.jsx
+import React, { useState, useEffect } from 'react';
 import { ALGORITHMS } from '../constants/index.js';
 
 const algorithmLabels = {
@@ -7,7 +7,7 @@ const algorithmLabels = {
   [ALGORITHMS.SELECTION_SORT]: 'Selection Sort',
   [ALGORITHMS.INSERTION_SORT]: 'Insertion Sort',
   [ALGORITHMS.MERGE_SORT]: 'Merge Sort',
-  [ALGORITHMS.QUICK_SORT]: 'Quick Sort'
+  [ALGORITHMS.QUICK_SORT]: 'Quick Sort',
 };
 
 // Fixed shuffles that are still readable
@@ -31,15 +31,18 @@ export default function Navbar({ activeAlgorithm, onSelect, onToggleSidebar, sid
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
+    // Debug: Log algorithm changes with window width for responsive testing
+    console.log("Navbar: Algorithm changed to", activeAlgorithm, "at width:", window.innerWidth);
     
     // Trigger animation and shuffle when algorithm changes
     setIsAnimating(true);
     
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setLogoText(getRandomShuffle());
       setIsAnimating(false);
     }, 150);
-    
+
+    return () => clearTimeout(timer);
   }, [activeAlgorithm]);
 
   // Reset logo to original on click
@@ -54,38 +57,42 @@ export default function Navbar({ activeAlgorithm, onSelect, onToggleSidebar, sid
   return (
     <nav
       className="sticky top-0 z-50 w-full bg-visualizer-bg-dark border-b border-visualizer-bg-secondary
-                 flex items-center justify-between px-6 py-6 shadow-sm"
+                 flex flex-col sm:flex-row items-center justify-between px-3 md:px-6 py-3 md:py-6 shadow-sm"
       style={{
-        minHeight: '80px',
-        backdropFilter: 'blur(6px)'
+        minHeight: '70px', // Smaller on mobile
+        backdropFilter: 'blur(6px)',
       }}
     >
-      {/* Left side - Logo with click handler */}
-      <div className="flex items-center">
+      {/* Left side - Logo with click handler - Hide on mobile */}
+      <div className="hidden md:flex items-center mb-3 sm:mb-0">
         <div 
           onClick={handleLogoClick}
-          className={`text-2xl font-bold text-visualizer-text-accent transition-all duration-300 cursor-pointer hover:scale-105 ${
+          className={`text-xl sm:text-2xl font-bold text-visualizer-text-accent transition-all duration-300 cursor-pointer hover:scale-105 select-none ${
             isAnimating ? 'scale-110 opacity-70' : 'scale-100 opacity-100'
           }`}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') handleLogoClick(); }}
+          aria-label="SortViz Logo - Click to reset"
         >
           {logoText}
         </div>
       </div>
 
-      {/* Rest of navbar stays the same */}
-      <div className="flex gap-3 justify-center items-center">
+      {/* Algorithm buttons - Smaller on mobile */}
+      <div className="flex flex-wrap justify-center gap-1 md:gap-3 mb-3 sm:mb-0">
         {Object.entries(algorithmLabels).map(([algorithmKey, algorithmLabel]) => (
           <button
             key={algorithmKey}
             onClick={() => onSelect(algorithmKey)}
             className={
-              `px-5 py-2 rounded transition-all duration-150 leading-none
+              `px-2 md:px-5 py-1 md:py-2 rounded transition-all duration-150 leading-none whitespace-nowrap text-xs md:text-base
               ${activeAlgorithm === algorithmKey
-                ? 'text-visualizer-text-accent text-xl font-bold scale-110'
-                : 'text-visualizer-text-secondary text-lg font-medium hover:text-visualizer-text-primary'}`
+                ? 'text-visualizer-text-accent font-bold scale-105 sm:scale-110 md:text-xl'
+                : 'text-visualizer-text-secondary font-medium hover:text-visualizer-text-primary md:text-lg'}`
             }
             style={{
-              height: '44px',
+              height: '32px', // Smaller on mobile
               display: 'flex',
               alignItems: 'center'
             }}
@@ -96,10 +103,11 @@ export default function Navbar({ activeAlgorithm, onSelect, onToggleSidebar, sid
         ))}
       </div>
 
-      <div className="flex items-center">
+      {/* Sidebar toggle button - only show on desktop */}
+      <div className="hidden md:flex items-center">
         <button
           onClick={onToggleSidebar}
-          className="p-3 rounded-lg bg-visualizer-bg-secondary hover:bg-visualizer-border-muted transition text-gray-400 hover:text-gray-300"
+          className="p-3 rounded-lg bg-visualizer-bg-secondary hover:bg-visualizer-border-muted transition text-gray-400 hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-visualizer-text-accent"
           aria-label="Toggle Sidebar"
         >
           <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
