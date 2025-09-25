@@ -1,8 +1,11 @@
 // /src/utils/helpers.js
 import { ARRAY_CONFIG, ARRAY_GENERATION_TYPES } from "../constants/index.js";
 
+//two methods but random unused 
 export const generateArray = (
     size = ARRAY_CONFIG.DEFAULT_SIZE,
+    
+    //locked in with only sequential rn 
     type = ARRAY_GENERATION_TYPES.SEQUENTIAL
 ) => {
     // Random: randomly choose vals from range 
@@ -12,10 +15,9 @@ export const generateArray = (
         });
     }
 
-    // Sequential with Fisher-Yates shuffle (all values 1-N, shuffled positions)
+    // Sequential fisher yates shuffle 
     const seqarray = Array.from({ length: size }, (_, i) => i + 1);
-    
-    // Fisher yates shuffle 
+
     for (let i = seqarray.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [seqarray[i], seqarray[j]] = [seqarray[j], seqarray[i]];
@@ -24,7 +26,9 @@ export const generateArray = (
     return seqarray;
 };
 
-// Sets the delay for animation purpose, promise resolves after the delay
+
+
+// Sets the delay for animation promise to resolve it back 
 export const sleep = (ms) => {
     return new Promise(resolve => setTimeout(resolve, ms));
 };
@@ -35,6 +39,7 @@ export const swapElements = (array, i, j) => {
     [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
     return newArray;
 };
+
 
 export const calculateBarHeight = (value, maxValue, containerHeight = 400) => {
     return Math.floor((value / maxValue) * containerHeight);

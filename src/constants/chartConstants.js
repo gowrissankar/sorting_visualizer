@@ -13,6 +13,8 @@ export const CHART_CONFIG = {
     }
 };
 
+//unused unique coloring methods 
+
 export const CHART_COLORS = {
     // Algorithm colors (different color per algorithm)
     ALGORITHMS: {
@@ -22,8 +24,8 @@ export const CHART_COLORS = {
         merge_sort: '#3498db',       // Blue
         quick_sort: '#43aa8b'        // Green/Teal
     },
-    INACTIVE_ALGORITHM: '#646669', // or any muted gray you prefer
-    CURRENT_ALGORITHM: '#4ecdc4',    // Teal (your theme)
+    INACTIVE_ALGORITHM: '#646669', // muted gray 
+    CURRENT_ALGORITHM: '#4ecdc4',    // Teal 
     USER_RUN: '#FFFFFF',             // White border
     BACKGROUND: '#2c2e34',
     TEXT_PRIMARY: '#d1d0c5',
@@ -38,6 +40,8 @@ export const CHART_STYLES = {
         POINT_HOVER_RADIUS: 4,
         BORDER_WIDTH: 2
     },
+
+    //run point specs 
     USER_RUN_POINT: {
         POINT_RADIUS: 8,
         POINT_HOVER_RADIUS: 10,

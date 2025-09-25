@@ -2,9 +2,11 @@
 
 import { supabase } from './supabaseClient.js'
 
+//provides all the db services through fucntions 
+
 export class PerformanceService {
 
-    //saving into the db 
+    //saving into db 
     static async savePerformanceData(algorithm, arraySize, comparisons) {
         //printing in console 
         console.log(`Saving performance: ${algorithm} (${arraySize}) - ${comparisons} comparisons`);
@@ -18,7 +20,7 @@ export class PerformanceService {
 
         if (error) throw error;
         
-        console.log(`✅ Performance data saved successfully!`);
+        console.log(`Performance data saved successfully!`);
         return { success: true };
     }
 
@@ -35,11 +37,10 @@ export class PerformanceService {
         // Calculate averages for display
         const processedData = data.map(record => ({
             ...record,
-            //calculates the avg 
             average_comparisons: Math.round(record.total_comparisons / record.sample_count),
         }));
 
-        console.log('📊 Performance data retrieved:', processedData);
+        console.log('Performance data retrieved:', processedData);
         return processedData;
     }
 

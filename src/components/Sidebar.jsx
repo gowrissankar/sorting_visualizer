@@ -18,7 +18,7 @@ export default function Sidebar({ activeAlgorithm, isOpen, isMobile = false }) {
         {algorithmName}
       </h2>
 
-      {/* Content Sections - No HR lines */}
+      {/* Content Sections*/}
       <div className="space-y-6">
         {/* Basic Idea */}
         <section>
@@ -72,7 +72,7 @@ export default function Sidebar({ activeAlgorithm, isOpen, isMobile = false }) {
           </div>
         </section>
 
-        {/* Best/Worst/Average - Fixed alignment */}
+        {/* Best/Worst/Average */}
         <section>
           <h3 className="font-medium text-gray-400 mb-2 text-base sm:text-sm md:text-base">
             Best/Worst/Average

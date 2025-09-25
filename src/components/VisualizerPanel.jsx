@@ -25,7 +25,7 @@ export default function VisualizerPanel({ activeAlgorithm, onAlgorithmChange }) 
     <div className="h-full flex flex-col space-y-6">
       {/* Main Content Area - Split between bars and chart */}
       <div className="flex-1 flex flex-col space-y-6 min-h-0">
-        {/* Bars Container - NO CARD BACKGROUND, just the area */}
+        {/* Bars Container  */}
         <div className="flex-1">
           <SortingVisualizer 
             activeAlgorithm={activeAlgorithm}

@@ -1,0 +1,27 @@
+-- Table
+CREATE TABLE algorithm_performance (
+  algorithm VARCHAR(20),
+  size INTEGER,
+  total_comparisons BIGINT,
+  sample_count INTEGER,
+  PRIMARY KEY (algorithm, size)
+);
+
+
+
+
+-- RPC function
+CREATE OR REPLACE FUNCTION upsert_performance(
+  p_algorithm VARCHAR,
+  p_size INTEGER,
+  p_comparisons INTEGER
+) RETURNS VOID AS $$
+BEGIN
+  INSERT INTO algorithm_performance (algorithm, size, total_comparisons, sample_count)
+  VALUES (p_algorithm, p_size, p_comparisons, 1)
+  ON CONFLICT (algorithm, size)
+  DO UPDATE SET
+    total_comparisons = algorithm_performance.total_comparisons + p_comparisons,
+    sample_count = algorithm_performance.sample_count + 1;
+END;
+$$ LANGUAGE plpgsql;

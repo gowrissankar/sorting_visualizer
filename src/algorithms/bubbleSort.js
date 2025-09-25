@@ -21,10 +21,13 @@ export const bubbleSort = async (array, animationMethods, getSpeed, abortRef) =>
                 return { sortedArray, comparisons, algorithm: 'Bubble Sort' };
             }
 
+
             // Highlight compared bars 
             animationMethods.highlightBars([j, j + 1], BAR_STATES.COMPARING);
             await sleep(getSpeed());
 
+
+            
             comparisons++;
 
             if (sortedArray[j] > sortedArray[j + 1]) {

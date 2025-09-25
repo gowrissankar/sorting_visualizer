@@ -25,10 +25,11 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
     const [loading, setLoading] = useState(true);
     const [yAxisMax, setYAxisMax] = useState(CHART_CONFIG.Y_AXIS.DEFAULT_SCALE);
     
-    // Use ref to track last processed run data to prevent loops
+    // Use ref to track last state to avoid rerender 
     const lastProcessedRun = useRef(null);
 
 
+    //fetch new on a chnage 
     useEffect(() => {
         loadChartData();
     }, [selectedAlgorithm]);
@@ -36,6 +37,7 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
 
     // Only update user run point when lastRunData actually changes
     useEffect(() => {
+        //whenever there is any diff rerender 
         if (chartData && lastRunData && 
             (!lastProcessedRun.current || 
              lastProcessedRun.current.size !== lastRunData.size || 
@@ -52,6 +54,9 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
     const loadChartData = async () => {
         try {
             setLoading(true);
+
+            //retrieving data from db 
+
             const data = await PerformanceService.getAllPerformanceData();
             const transformed = transformToChartData(data, selectedAlgorithm);
             setChartData(transformed);
@@ -66,6 +71,8 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
 
 
     const transformToChartData = (data, selectedAlgo) => {
+        
+        //conv into dataset for each algo 
         const algorithms = {};
         data.forEach(record => {
             if (!algorithms[record.algorithm]) {
@@ -97,7 +104,7 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
         });
 
 
-        // Add user run dataset (teal dot with tooltip)
+        // Add user last rn 
         datasets.push({
             label: 'user_run',
             data: [], // Start empty
@@ -164,6 +171,8 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
                     </div>
                 ) : chartData && chartData.datasets.length > 0 ? (
                     <Line
+
+                        //pass dataset to this to generate the req curve 
                         data={chartData}
                         options={{
                             responsive: true,
@@ -246,7 +255,7 @@ export default function PerformanceChart({ selectedAlgorithm, lastRunData }) {
                     </span>
                 </div>
                 
-                {/* Refresh Button - SMALLER ON MOBILE */}
+                {/* Refresh Button */}
                 <button
                     onClick={loadChartData}
                     className="w-8 h-8 md:w-10 md:h-10 rounded bg-visualizer-bg-dark hover:bg-visualizer-border-muted transition text-gray-400 hover:text-gray-300 flex items-center justify-center touch-manipulation"

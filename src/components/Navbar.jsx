@@ -21,7 +21,7 @@ const LOGO_VARIATIONS = [
   'SorzVit'
 ];
 
-// Get random shuffle from fixed list
+// Get random logo 
 const getRandomShuffle = () => {
   return LOGO_VARIATIONS[Math.floor(Math.random() * LOGO_VARIATIONS.length)];
 };
@@ -31,7 +31,6 @@ export default function Navbar({ activeAlgorithm, onSelect, onToggleSidebar, sid
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
-    // Debug: Log algorithm changes with window width for responsive testing
     console.log("Navbar: Algorithm changed to", activeAlgorithm, "at width:", window.innerWidth);
     
     // Trigger animation and shuffle when algorithm changes
@@ -63,7 +62,7 @@ export default function Navbar({ activeAlgorithm, onSelect, onToggleSidebar, sid
         backdropFilter: 'blur(6px)',
       }}
     >
-      {/* Left side - Logo with click handler - Hide on mobile */}
+      {/* Left side - Logo with click handler - Hidden on mobile */}
       <div className="hidden md:flex items-center mb-3 sm:mb-0">
         <div 
           onClick={handleLogoClick}

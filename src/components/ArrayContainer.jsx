@@ -13,13 +13,15 @@ const ArrayContainer = ({
     // Reference to the container for responsive
     const containerRef = useRef(null);
 
-    // State to track current width of the container
+    //current width of the container
     const [containerWidth, setContainerWidth] = useState(VISUAL_CONFIG.CONTAINER.WIDTH);
 
-    // Pause/Step control
+    // Pause/Step control - unused 
     const [isPaused, setIsPaused] = useState(false);
     const [stepMode, setStepMode] = useState(false);
     const pauseResolve = useRef(null);
+
+
 
     // Update container width on resize
     useEffect(() => {
@@ -34,10 +36,11 @@ const ArrayContainer = ({
         return () => window.removeEventListener('resize', updateWidth);
     }, []);
 
+
+
     // Local display array used for visual changes like swapping
     const [displayArray, setDisplayArray] = useState(array);
 
-    // Sync internal display array when the incoming array prop changes
     useEffect(() => {
         setDisplayArray(array);
     }, [array]);
@@ -45,7 +48,6 @@ const ArrayContainer = ({
     // Bar states: each index has a visual state (e.g., DEFAULT, COMPARING)
     const [barStates, setBarStates] = useState({});
 
-    // Reset bar states when the main array changes
     useEffect(() => {
         const initialStates = {};
         array.forEach((_, index) => {
@@ -53,6 +55,8 @@ const ArrayContainer = ({
         });
         setBarStates(initialStates);
     }, [array]);
+
+
 
     // Highlight multiple bars with a given state (e.g., COMPARING)
     const highlightBars = useCallback((indices, state = BAR_STATES.COMPARING) => {
@@ -62,6 +66,8 @@ const ArrayContainer = ({
         });
         setBarStates(prev => ({ ...prev, ...updates }));
     }, []);
+
+
 
     // Reset specific bars, or all bars if no indices given
     const resetBarStates = useCallback((indices = null) => {
@@ -80,7 +86,9 @@ const ArrayContainer = ({
         }
     }, [displayArray]);
 
-    // Mark selected bars as SORTED
+
+
+    // set sorted 
     const markAsSorted = useCallback((indices) => {
         const updates = {};
         indices.forEach(index => {
@@ -89,7 +97,9 @@ const ArrayContainer = ({
         setBarStates(prev => ({ ...prev, ...updates }));
     }, []);
 
-    // Swap the values of two bars in displayArray and mark them as SWAPPING
+
+
+    // Swap 
     const swapBars = useCallback((index1, index2) => {
         setBarStates(prev => ({
             ...prev,
@@ -104,7 +114,8 @@ const ArrayContainer = ({
         });
     }, []);
 
-    // Pause/Resume functionality
+
+    // Pause/Resume functionality - unused 
     const pauseAnimation = useCallback(() => {
         setIsPaused(true);
     }, []);
@@ -134,17 +145,20 @@ const ArrayContainer = ({
         return isPaused;
     }, [isPaused]);
 
+
+
+
     // Handle clicks on bars (only when idle)
     const handleBarClick = useCallback((index) => {
         if (animationState === ANIMATION_STATES.IDLE) {
-            // Optionally handle bar click (for future features)
+            
         }
     }, [animationState, displayArray]);
 
     // Is a sorting animation currently active?
     const isSorting = animationState === ANIMATION_STATES.PLAYING;
 
-    // Methods to expose to sorting algorithms (via parent callback)
+    //for passing the methods to the parent module to be used 
     const animationMethods = {
         highlightBars,
         resetBarStates,
@@ -152,6 +166,7 @@ const ArrayContainer = ({
         swapBars,
         setDisplayArray,
         setBarStates,
+
         // Pause/Step methods
         pauseAnimation,
         resumeAnimation,
@@ -160,16 +175,19 @@ const ArrayContainer = ({
         isPaused: checkPaused
     };
 
-    // Provide animation methods to parent on mount/update
+
+    // Provide animation methods to parent
     useEffect(() => {
         if (onAnimationComplete) {
             onAnimationComplete(animationMethods);
         }
     }, [onAnimationComplete, animationMethods]);
 
+
+
+
     return (
         <div className={`array-container ${className} w-full h-full`}>
-            {/* Responsive container, transparent background since it's inside a card */}
             <div
                 ref={containerRef}
                 className="w-full h-full flex-1 flex items-end justify-center overflow-hidden px-1 sm:px-0"

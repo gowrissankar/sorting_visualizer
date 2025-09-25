@@ -202,7 +202,7 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
 
     return (
         <div className="w-full h-full flex flex-col gap-3 md:gap-6">
-            {/* Bars Card - SMALLER ON MOBILE */}
+            {/* Bars Card  */}
             <div className="bg-visualizer-bg-secondary rounded-xl shadow-lg p-3 md:p-6 flex-1 min-h-48 md:min-h-80">
                 <div className="w-full h-full flex items-end justify-center overflow-hidden">
                     <ArrayContainer
@@ -213,7 +213,7 @@ const SortingVisualizer = ({ activeAlgorithm, onAlgorithmChange, onSortingComple
                 </div>
             </div>
 
-            {/* Controls Card - COMPACT ON MOBILE */}
+            {/* Controls Card */}
             <div className="bg-visualizer-bg-secondary rounded-xl shadow-lg p-3 md:p-6 flex-shrink-0">
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-6 items-center justify-center">
                     {/* Sliders Container - SIDE BY SIDE ON ALL SCREENS */}

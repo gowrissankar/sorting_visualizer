@@ -9,11 +9,12 @@ const ArrayBar = ({
     state = BAR_STATES.DEFAULT,
     onClick,
     isSorting = false,
-    containerWidth = VISUAL_CONFIG.CONTAINER.WIDTH // ✅ Responsive width
+    containerWidth = VISUAL_CONFIG.CONTAINER.WIDTH 
 }) => {
     const [isHovered, setIsHovered] = useState(false);
     
-    // ✅ RESPONSIVE: Width calculation using actual container width
+    //witdth calc with the container 
+
     const availableWidth = containerWidth - (VISUAL_CONFIG.CONTAINER.PADDING * 2);
     const totalGaps = (arraySize - 1) * VISUAL_CONFIG.BAR.GAP;
     const widthForBars = availableWidth - totalGaps;
@@ -24,13 +25,14 @@ const ArrayBar = ({
         Math.min(calculatedWidth, VISUAL_CONFIG.BAR.MAX_WIDTH)
     );
     
-    // Linear height calculation
+
+
+    // height calculation
     const baseHeight = 4;
     const maxUsableHeight = VISUAL_CONFIG.CONTAINER.HEIGHT - (VISUAL_CONFIG.CONTAINER.PADDING * 2);
     const scalingFactor = (maxUsableHeight - baseHeight) / arraySize;
     const barHeight = baseHeight + (value * scalingFactor);
     
-    // ✅ RESPONSIVE: Font size and gap proportional to bar width with mobile constraints
     const responsiveFontSize = Math.max(6, Math.min(16, barWidth * 0.5)); // Minimum 6px for mobile
     const numberOffset = barHeight + Math.max(4, barWidth * 0.15); // Minimum 4px gap for mobile
     
@@ -40,6 +42,7 @@ const ArrayBar = ({
             return 'bg-visualizer-bar-hover shadow-lg';
         }
         
+        //setting the color based on state 
         switch (state) {
             case BAR_STATES.COMPARING: 
                 return 'bg-visualizer-bar-comparing shadow-md';
@@ -54,7 +57,7 @@ const ArrayBar = ({
         }
     };
 
-    // Mobile-friendly touch handling - prevent hover states on touch devices
+    // Mobile-friendly touch handling 
     const handleTouchStart = () => {
         if ('ontouchstart' in window) {
             // Skip hover effects on touch devices
@@ -88,7 +91,7 @@ const ArrayBar = ({
                 aria-label={`Array element ${index + 1} with value ${value}`}
             />
             
-            {/* ✅ CONDITIONAL: Only show when not sorting and bar is wide enough */}
+            {/* hover conditions when not sorting and wide enough ( 8 px ) */}
             {!isSorting && barWidth > 8 && (
                 <div 
                     className={`
